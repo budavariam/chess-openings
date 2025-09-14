@@ -3,7 +3,19 @@ services:
   web:
     build: .
     ports:
-      - '8080:80'
+      - '127.0.0.1:1212:80'
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - '127.0.0.1:5173:5173'
+    volumes:
+      - ./src:/app/src
     restart: unless-stopped
     environment:
       - NODE_ENV=production

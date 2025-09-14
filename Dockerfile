@@ -1,5 +1,5 @@
 # Stage 1 - development with hot reload
-FROM node:18-alpine AS dev
+FROM node:22-alpine AS dev
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
@@ -8,7 +8,7 @@ EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # Stage 2 - build
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --legacy-peer-deps || npm install
