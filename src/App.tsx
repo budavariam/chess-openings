@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { ToastContainer } from 'react-toastify'
-import ChessPractice from './components/ChessPractice'
+import ChessPractice from './ChessPractice'
 import 'react-toastify/dist/ReactToastify.css'
 
 export default function App() {
