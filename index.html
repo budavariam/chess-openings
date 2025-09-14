@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+<script>
+  // Initialize dark mode early to avoid flash.
+  (function() {
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else if (stored === 'light') {
+        document.documentElement.classList.remove('dark');
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
+    } catch (e) { /* ignore */ }
+  })();
+</script>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chess Openings Trainer</title>
+  </head>
+  <body class="bg-gray-50 dark:bg-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,3 @@
+[submodule "eco.json"]
+	path = src/eco.json
+	url = git@github.com:hayatbiralem/eco.json.git
