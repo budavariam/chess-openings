@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --base /chess-openings/",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --base /chess-openings/"
   },
   "dependencies": {
     "chess-tools": "^0.3.0",
