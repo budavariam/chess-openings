@@ -601,6 +601,7 @@ export default function ChessPractice() {
             popularMovesIndex={popularMovesIndex}
             moveHistory={moveHistory}
             openingsCount={openings.length}
+            onStudyOpening={startSearchResult} 
           />
 
           <OpeningControls

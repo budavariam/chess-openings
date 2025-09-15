@@ -21,11 +21,16 @@ export function OpeningControls({
   goToEnd
 }: OpeningControlsProps) {
   if (!isPlayingOpening || !matchedOpening) {
-    return (
-      <div className="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800 text-xs">
-        Debug: Controls not showing - isPlayingOpening: {String(isPlayingOpening)}, hasMatchedOpening: {String(!!matchedOpening)}
-      </div>
-    )
+    if (import.meta.env.DEV) {
+      return (
+        <div className="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800 text-xs">
+          Debug: Controls not showing - isPlayingOpening: {String(isPlayingOpening)}, hasMatchedOpening: {String(!!matchedOpening)}
+        </div>
+      )
+    }
+    else {
+      return null
+    }
   }
 
   return (

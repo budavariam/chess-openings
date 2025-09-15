@@ -7,18 +7,26 @@ interface GameStatusProps {
   popularMovesIndex: number
   moveHistory: string[]
   openingsCount: number
+  onStudyOpening?: (opening: Opening) => void
 }
 
-export function GameStatus({ 
-  isPlayingOpening, 
-  matchedOpening, 
-  popularMovesIndex, 
-  moveHistory, 
-  openingsCount 
+export function GameStatus({
+  isPlayingOpening,
+  matchedOpening,
+  popularMovesIndex,
+  moveHistory,
+  openingsCount,
+  onStudyOpening
 }: GameStatusProps) {
-  const currentOpeningProgress = matchedOpening 
-    ? `${popularMovesIndex}/${matchedOpening.moves.length}` 
+  const currentOpeningProgress = matchedOpening
+    ? `${popularMovesIndex}/${matchedOpening.moves.length}`
     : '0/0'
+
+  const handleStudyClick = () => {
+    if (matchedOpening && onStudyOpening) {
+      onStudyOpening(matchedOpening)
+    }
+  }
 
   return (
     <>
@@ -40,7 +48,18 @@ export function GameStatus({
       {/* Opening and Move History Grid */}
       <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <h3 className="font-medium text-gray-900 dark:text-white">Matched Opening</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium text-gray-900 dark:text-white">Matched Opening</h3>
+            {matchedOpening && !isPlayingOpening && onStudyOpening && (
+              <button
+                className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                onClick={handleStudyClick}
+                title="Study this opening"
+              >
+                📚 Study
+              </button>
+            )}
+          </div>
           {matchedOpening ? (
             <div>
               <div className="text-sm text-gray-400 flex gap-2 flex-wrap">
