@@ -405,13 +405,10 @@ export default function ChessPractice() {
       setGame(g)
       setMoveHistory([...g.history()])
       setPopularMovesIndex(safeIndex)
-
       if (safeIndex === 0) {
         toast.info('Moved to start position')
-      } else if (safeIndex === maxMoves) {
-        toast.info(`Moved to end of opening (${maxMoves} moves)`)
       } else {
-        toast.info(`Moved to move ${safeIndex}`)
+        toast.info(`Moved to ${chosen.moves[safeIndex - 1]}`)
       }
 
     } catch (error: any) {
@@ -478,7 +475,7 @@ export default function ChessPractice() {
             popularMovesIndex={popularMovesIndex}
             moveHistory={moveHistory}
             openingsCount={openings.length}
-            onStudyOpening={startSearchResult} 
+            onStudyOpening={startSearchResult}
           />
 
           <OpeningControls
