@@ -461,15 +461,24 @@ export default function ChessPractice() {
           currentFen: game.fen()
         })
 
-        const g = new Chess(game.fen())
-        g.undo()
-        setGame(g)
-        setMoveHistory([...g.history()])
+        // Get the target position by replaying moves
+        const chosen = matchedOpening || popularSorted[popularIndex]
+        const newGame = new Chess()
+
+        // Replay moves up to the target index
+        for (let i = 0; i < popularMovesIndex - 1; i++) {
+          if (chosen && i < chosen.moves.length) {
+            newGame.move(chosen.moves[i])
+          }
+        }
+
+        setGame(newGame) // New instance triggers re-render
+        setMoveHistory([...newGame.history()])
         setPopularMovesIndex(popularMovesIndex - 1)
 
         logAction('Step back successful', {
           newIndex: popularMovesIndex - 1,
-          newFen: g.fen()
+          newFen: newGame.fen()
         })
         toast.info('Stepped back one move')
       } else {
@@ -481,7 +490,7 @@ export default function ChessPractice() {
       logAction('ERROR: Exception during step back', { error: errorMessage })
       toast.error(`Error stepping back: ${errorMessage}`)
     }
-  }, [popularMovesIndex, game, logAction])
+  }, [popularMovesIndex, game, logAction, matchedOpening, popularSorted, popularIndex])
 
   const resetGame = useCallback(() => {
     try {
