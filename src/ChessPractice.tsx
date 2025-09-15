@@ -26,24 +26,18 @@ export default function ChessPractice() {
   const [matchedOpening, setMatchedOpening] = useState<Opening | null>(null)
   const [fenToOpening, setFenToOpening] = useState<Map<string, Opening>>(new Map())
 
-  // For the "popular" mode stepper
   const [popularIndex, setPopularIndex] = useState(0)
   const [popularMovesIndex, setPopularMovesIndex] = useState(0)
   const [isPlayingOpening, setIsPlayingOpening] = useState(false)
 
-  // Search functionality
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Opening[]>([])
-
-  // UI preferences
   const [boardOrientation, setBoardOrientation] = useState<BoardOrientation>('white')
 
-  // Enhanced logging function
   const logAction = useCallback((action: string, details?: any) => {
     console.log(`[ChessPractice] ${action}`, details || '')
   }, [])
 
-  // Make a move programmatically (for suggested moves)
   const makeMove = useCallback((moveStr: string): boolean => {
     try {
       const g = new Chess(game.fen())
@@ -55,7 +49,6 @@ export default function ChessPractice() {
         setMoveHistory([...g.history()])
         toast.success(`Played ${move.san}`)
 
-        // Reset opening playbook if user makes manual move during playback
         if (isPlayingOpening) {
           logAction('Manual move during opening playback - resetting')
           setIsPlayingOpening(false)
@@ -70,7 +63,7 @@ export default function ChessPractice() {
         return false
       }
     } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
+      const errorMessage = error?.message || String(error)
       logAction('ERROR: Programmatic move exception', { move: moveStr, error: errorMessage })
       toast.error(`Move failed: ${errorMessage}`)
       return false
@@ -81,11 +74,9 @@ export default function ChessPractice() {
     logAction('Initializing ECO data...')
 
     try {
-      // Combine all ECO files
       const allEcoData = { ...ecoA, ...ecoB, ...ecoC, ...ecoD, ...ecoE }
       logAction('Combined ECO files', { totalEntries: Object.keys(allEcoData).length })
 
-      // Convert eco.json format: { "fen": { opening_data } }
       const mapped: Opening[] = []
       const fenMap = new Map<string, Opening>()
 
@@ -120,13 +111,12 @@ export default function ChessPractice() {
       setFenToOpening(fenMap)
       toast.success(`Loaded ${mapped.length} chess openings`)
     } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
+      const errorMessage = error?.message || String(error)
       logAction('ERROR: Failed to initialize ECO data', errorMessage)
       toast.error(`Failed to load openings: ${errorMessage}`)
     }
   }, [logAction])
 
-  // Search functionality
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([])
@@ -135,38 +125,30 @@ export default function ChessPractice() {
 
     const query = searchQuery.toLowerCase()
     const results = openings.filter(opening => {
-      // Search by name
       if (opening.name.toLowerCase().includes(query)) return true
+      if (opening.eco?.toLowerCase().includes(query)) return true
 
-      // Search by ECO code
-      if (opening.eco && opening.eco.toLowerCase().includes(query)) return true
-
-      // Search by move sequence
       const moveSequence = opening.moves.join(' ').toLowerCase()
       if (moveSequence.includes(query)) return true
 
-      // Search by aliases
       if (opening.aliases) {
         const aliasValues = Object.values(opening.aliases).join(' ').toLowerCase()
         if (aliasValues.includes(query)) return true
       }
 
       return false
-    }).slice(0, 50) // Limit results
+    }).slice(0, 50)
 
     logAction('Search completed', { query, resultCount: results.length })
     setSearchResults(results)
   }, [searchQuery, openings, logAction])
 
-  // SIMPLIFIED: Skip automatic matching when studying an opening
   useEffect(() => {
-    // FIXED: Skip all automatic matching when in study mode
     if (isPlayingOpening) {
       logAction('Skipping automatic opening matching - in study mode')
       return
     }
 
-    // Use FEN-based matching (eco.json's primary identification method)
     const currentFen = game.fen()
     const hist = moveHistory
 
@@ -175,7 +157,6 @@ export default function ChessPractice() {
       return
     }
 
-    // Method 1: Direct FEN lookup (most reliable with eco.json)
     let match = fenToOpening.get(currentFen)
     if (match) {
       logAction('Opening matched by FEN', { name: match.name, eco: match.eco })
@@ -183,17 +164,15 @@ export default function ChessPractice() {
       return
     }
 
-    // Method 2: Try position-only matching (first part of FEN)
-    const positionPart = currentFen.split(' ')[0]
+    const positionPart = currentFen.split(' ')
     for (const [fen, opening] of fenToOpening.entries()) {
-      if (fen.split(' ')[0] === positionPart) {
+      if (fen.split(' ') === positionPart) {
         logAction('Opening matched by position', { name: opening.name, eco: opening.eco })
         setMatchedOpening(opening)
         return
       }
     }
 
-    // Method 3: Fallback to move sequence matching
     const moveSequenceMatch = openings.find(o => {
       if (o.moves.length < hist.length) return false
       return hist.every((move, i) => o.moves[i] === move)
@@ -246,7 +225,6 @@ export default function ChessPractice() {
       setGame(g)
       setMoveHistory([...g.history()])
 
-      // Reset opening playback if user makes manual move during playback
       if (isPlayingOpening) {
         logAction('User made manual move during opening playback - resetting')
         setIsPlayingOpening(false)
@@ -257,7 +235,7 @@ export default function ChessPractice() {
       return true
 
     } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
+      const errorMessage = error?.message || String(error)
       logAction('ERROR: Invalid move attempted', {
         from: sourceSquare,
         to: targetSquare,
@@ -268,16 +246,11 @@ export default function ChessPractice() {
     }
   }, [game, isPlayingOpening, logAction])
 
-  // Get suggested next moves based on current position - FIXED for both sides
   const suggestions = useMemo(() => {
-    // Always show suggestions, even at the start
     const matches = openings.filter(o => {
       if (o.moves.length <= moveHistory.length) return false
-
-      // If no moves played yet, suggest first moves
       if (moveHistory.length === 0) return true
 
-      // Check if current move history matches the opening prefix
       for (let i = 0; i < moveHistory.length; i++) {
         if (o.moves[i] !== moveHistory[i]) return false
       }
@@ -288,7 +261,6 @@ export default function ChessPractice() {
       matches.map(m => m.moves[moveHistory.length]).filter(Boolean)
     ))
 
-    // Sort moves by popularity
     const movesWithPopularity = uniqueMoves.map(move => {
       const openingsWithMove = matches.filter(o => o.moves[moveHistory.length] === move)
       const avgPopularity = openingsWithMove.reduce((sum, o) => sum + o.popularity, 0) / openingsWithMove.length
@@ -306,14 +278,11 @@ export default function ChessPractice() {
     return movesWithPopularity.slice(0, 8).map(item => item.move)
   }, [moveHistory, openings, logAction])
 
-  // FIXED: Filter popular openings by current position/moves when playing an opening
   const popularSorted = useMemo(() => {
     let filteredOpenings = openings
 
-    // If we're currently in a position with moves, filter to show continuations
     if (moveHistory.length > 0) {
       filteredOpenings = openings.filter(o => {
-        // Show openings that start with our current move sequence
         if (o.moves.length <= moveHistory.length) return false
         return moveHistory.every((move, i) => o.moves[i] === move)
       })
@@ -338,7 +307,6 @@ export default function ChessPractice() {
       .slice(0, 100)
   }, [openings, moveHistory, logAction])
 
-  // FIXED: Set matched opening IMMEDIATELY before setting isPlayingOpening
   const startPopularAt = useCallback((index: number) => {
     try {
       const chosen = popularSorted[index]
@@ -360,22 +328,19 @@ export default function ChessPractice() {
       setPopularMovesIndex(0)
       setGame(g)
       setMoveHistory([])
-
-      // FIXED: Set matched opening IMMEDIATELY, before setting isPlayingOpening
       setMatchedOpening(chosen)
-      setIsPlayingOpening(true) // Now both conditions are true
+      setIsPlayingOpening(true)
       setMode('popular')
 
       toast.success(`Started studying: ${chosen.name}`)
 
     } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
+      const errorMessage = error?.message || String(error)
       logAction('ERROR: Failed to start popular opening', { index, error: errorMessage })
       toast.error(`Failed to start opening: ${errorMessage}`)
     }
   }, [popularSorted, logAction])
 
-  // FIXED: Set matched opening IMMEDIATELY before setting isPlayingOpening
   const startSearchResult = useCallback((opening: Opening) => {
     try {
       logAction('Starting opening from search', {
@@ -387,13 +352,10 @@ export default function ChessPractice() {
       const g = new Chess()
       setGame(g)
       setMoveHistory([])
-
-      // FIXED: Set matched opening IMMEDIATELY, before setting isPlayingOpening
       setMatchedOpening(opening)
-      setIsPlayingOpening(true) // Now both conditions are true
+      setIsPlayingOpening(true)
       setPopularMovesIndex(0)
 
-      // Find index in popularSorted for consistency
       const index = popularSorted.findIndex(o => o.fen === opening.fen)
       setPopularIndex(Math.max(0, index))
       setMode('popular')
@@ -401,96 +363,63 @@ export default function ChessPractice() {
       toast.success(`Started studying: ${opening.name}`)
 
     } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
+      const errorMessage = error?.message || String(error)
       logAction('ERROR: Failed to start opening from search', { opening: opening.name, error: errorMessage })
       toast.error(`Failed to start opening: ${errorMessage}`)
     }
   }, [popularSorted, logAction])
 
-  const popularStepForward = useCallback(() => {
+  const navigateToMove = useCallback((targetIndex: number) => {
     try {
       const chosen = matchedOpening || popularSorted[popularIndex]
-      if (!chosen || popularMovesIndex >= chosen.moves.length) {
-        logAction('Cannot step forward', {
-          hasOpening: !!chosen,
-          currentIndex: popularMovesIndex,
-          totalMoves: chosen?.moves.length || 0
-        })
-        toast.warning('No more moves in this opening')
+      if (!chosen) {
+        logAction('Cannot navigate - no opening selected')
+        toast.error('No opening selected')
         return
       }
 
-      const moveSAN = chosen.moves[popularMovesIndex]
-      const g = new Chess(game.fen())
+      const maxMoves = chosen.moves.length
+      const safeIndex = Math.max(0, Math.min(targetIndex, maxMoves))
 
-      logAction('Stepping forward', {
-        moveIndex: popularMovesIndex,
-        move: moveSAN,
-        currentFen: game.fen()
+      logAction('Navigating to move', {
+        targetIndex,
+        safeIndex,
+        maxMoves,
+        currentIndex: popularMovesIndex
       })
 
-      const move = g.move(moveSAN)
-      if (move) {
-        setGame(g)
-        setMoveHistory([...g.history()])
-        setPopularMovesIndex(popularMovesIndex + 1)
-        logAction('Step forward successful', {
-          newIndex: popularMovesIndex + 1,
-          newFen: g.fen()
-        })
-        toast.info(`Played: ${move.san}`)
-      } else {
-        logAction('ERROR: Failed to apply move', { move: moveSAN })
-        toast.error(`Failed to play move: ${moveSAN}`)
-      }
-    } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
-      logAction('ERROR: Exception during step forward', {
-        error: errorMessage,
-        moveIndex: popularMovesIndex
-      })
-      toast.error(`Error stepping forward: ${errorMessage}`)
-    }
-  }, [matchedOpening, popularSorted, popularIndex, popularMovesIndex, game, logAction])
-
-  const popularStepBack = useCallback(() => {
-    try {
-      if (popularMovesIndex > 0) {
-        logAction('Stepping back', {
-          currentIndex: popularMovesIndex,
-          currentFen: game.fen()
-        })
-
-        // Get the target position by replaying moves
-        const chosen = matchedOpening || popularSorted[popularIndex]
-        const newGame = new Chess()
-
-        // Replay moves up to the target index
-        for (let i = 0; i < popularMovesIndex - 1; i++) {
-          if (chosen && i < chosen.moves.length) {
-            newGame.move(chosen.moves[i])
+      const g = new Chess()
+      for (let i = 0; i < safeIndex; i++) {
+        if (i < chosen.moves.length) {
+          const move = g.move(chosen.moves[i])
+          if (!move) {
+            logAction('ERROR: Failed to apply move during navigation', {
+              moveIndex: i,
+              move: chosen.moves[i]
+            })
+            break
           }
         }
-
-        setGame(newGame) // New instance triggers re-render
-        setMoveHistory([...newGame.history()])
-        setPopularMovesIndex(popularMovesIndex - 1)
-
-        logAction('Step back successful', {
-          newIndex: popularMovesIndex - 1,
-          newFen: newGame.fen()
-        })
-        toast.info('Stepped back one move')
-      } else {
-        logAction('Cannot step back - already at start')
-        toast.warning('Already at the beginning')
       }
+
+      setGame(g)
+      setMoveHistory([...g.history()])
+      setPopularMovesIndex(safeIndex)
+
+      if (safeIndex === 0) {
+        toast.info('Moved to start position')
+      } else if (safeIndex === maxMoves) {
+        toast.info(`Moved to end of opening (${maxMoves} moves)`)
+      } else {
+        toast.info(`Moved to move ${safeIndex}`)
+      }
+
     } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
-      logAction('ERROR: Exception during step back', { error: errorMessage })
-      toast.error(`Error stepping back: ${errorMessage}`)
+      const errorMessage = error?.message || String(error)
+      logAction('ERROR: Exception during navigation', { targetIndex, error: errorMessage })
+      toast.error(`Navigation failed: ${errorMessage}`)
     }
-  }, [popularMovesIndex, game, logAction, matchedOpening, popularSorted, popularIndex])
+  }, [matchedOpening, popularSorted, popularIndex, popularMovesIndex, logAction])
 
   const resetGame = useCallback(() => {
     try {
@@ -504,65 +433,14 @@ export default function ChessPractice() {
       logAction('Game reset successful')
       toast.success('Game reset')
     } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
+      const errorMessage = error?.message || String(error)
       logAction('ERROR: Failed to reset game', errorMessage)
       toast.error(`Reset failed: ${errorMessage}`)
     }
   }, [logAction])
 
-  // Movement control functions
-  const goToStart = useCallback(() => {
-    try {
-      logAction('Going to start position')
-      const g = new Chess()
-      setGame(g)
-      setMoveHistory([])
-      setPopularMovesIndex(0)
-      if (isPlayingOpening && matchedOpening) {
-        logAction('Reset to start of opening', { opening: matchedOpening.name })
-      }
-      toast.info('Moved to start position')
-    } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
-      logAction('ERROR: Failed to go to start', errorMessage)
-      toast.error(`Failed to go to start: ${errorMessage}`)
-    }
-  }, [isPlayingOpening, matchedOpening, logAction])
-
-  const goToEnd = useCallback(() => {
-    try {
-      const chosen = matchedOpening || popularSorted[popularIndex]
-      if (!chosen) return
-
-      logAction('Going to end of opening', { totalMoves: chosen.moves.length })
-
-      const g = new Chess()
-      for (let i = 0; i < chosen.moves.length; i++) {
-        const move = g.move(chosen.moves[i])
-        if (!move) {
-          logAction('ERROR: Failed to apply move during go-to-end', {
-            moveIndex: i,
-            move: chosen.moves[i]
-          })
-          break
-        }
-      }
-
-      setGame(g)
-      setMoveHistory([...g.history()])
-      setPopularMovesIndex(chosen.moves.length)
-      toast.info(`Moved to end of opening (${chosen.moves.length} moves)`)
-
-    } catch (error: any) {
-      const errorMessage = error && typeof error === 'object' && error.message ? error.message : String(error)
-      logAction('ERROR: Exception during go-to-end', errorMessage)
-      toast.error(`Failed to go to end: ${errorMessage}`)
-    }
-  }, [matchedOpening, popularSorted, popularIndex, logAction])
-
   return (
     <div className="flex flex-col lg:flex-row gap-4">
-      {/* Chessboard with last move highlighting */}
       <ChessBoard
         position={position}
         boardOrientation={boardOrientation}
@@ -576,13 +454,12 @@ export default function ChessPractice() {
           setBoardOrientation={setBoardOrientation}
           logAction={logAction}
         />
-        {/* Suggested Moves */}
+
         <SuggestedMoves
           suggestions={suggestions}
           makeMove={makeMove}
         />
 
-        {/* Mode and Status */}
         <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Training Mode</h2>
@@ -608,14 +485,11 @@ export default function ChessPractice() {
             isPlayingOpening={isPlayingOpening}
             matchedOpening={matchedOpening}
             popularMovesIndex={popularMovesIndex}
-            goToStart={goToStart}
-            popularStepBack={popularStepBack}
-            popularStepForward={popularStepForward}
-            goToEnd={goToEnd}
+            onNavigate={navigateToMove}
+            gameHistoryLength={moveHistory.length}
           />
         </div>
 
-        {/* Search Mode */}
         {mode === 'search' && (
           <SearchOpenings
             searchQuery={searchQuery}
@@ -625,7 +499,6 @@ export default function ChessPractice() {
           />
         )}
 
-        {/* Popular Openings */}
         {mode === 'popular' && (
           <PopularOpenings
             moveHistory={moveHistory}
