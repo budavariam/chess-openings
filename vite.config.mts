@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  base: '/chess-openings/',  // Keep the trailing slash
+  base: './',  // Keep the trailing slash
   plugins: [
     react(),
     tailwindcss(),
@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     port: 5173,
     // For local development with the base path
-    open: '/chess-openings/'
+    open: '/'
   },
   build: {
     outDir: 'dist',
