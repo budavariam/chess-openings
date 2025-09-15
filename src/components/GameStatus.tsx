@@ -76,6 +76,7 @@ export function GameStatus({
                 )}
               </div>
               <div className="font-semibold text-gray-900 dark:text-white">{matchedOpening.name}</div>
+              <div className="italic text-gray-900 dark:text-white">{matchedOpening.moves.join(" ")}</div>
             </div>
           ) : (
             <div className="text-gray-500">No match</div>

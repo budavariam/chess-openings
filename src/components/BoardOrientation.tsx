@@ -8,10 +8,10 @@ interface BoardOrientationProps {
   logAction: (action: string, details?: any) => void
 }
 
-export function BoardOrientationControl({ 
-  boardOrientation, 
-  setBoardOrientation, 
-  logAction 
+export function BoardOrientationControl({
+  boardOrientation,
+  setBoardOrientation,
+  logAction
 }: BoardOrientationProps) {
   const handleOrientationChange = (orientation: BoardOrientation) => {
     setBoardOrientation(orientation)
@@ -24,24 +24,10 @@ export function BoardOrientationControl({
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Board Orientation</h2>
       <div className="flex gap-2">
         <button
-          className={`px-3 py-1 rounded text-sm border ${
-            boardOrientation === 'white'
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-          }`}
-          onClick={() => handleOrientationChange('white')}
+          className="px-3 py-1 rounded text-sm border bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 cursor-pointer"
+          onClick={() => handleOrientationChange(boardOrientation === 'white' ? 'black' : 'white')}
         >
-          ♔ White
-        </button>
-        <button
-          className={`px-3 py-1 rounded text-sm border ${
-            boardOrientation === 'black'
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-          }`}
-          onClick={() => handleOrientationChange('black')}
-        >
-          ♚ Black
+          {boardOrientation === 'white' ? "♔ White" : "♚ Black"}
         </button>
       </div>
     </div>
