@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react'
+import React, { useReducer, useMemo, useCallback, useEffect } from 'react'
 import { Chess } from 'chess.js'
 import { PieceDropHandlerArgs } from 'react-chessboard'
 import { toast } from 'react-toastify'
@@ -18,61 +18,124 @@ import { SuggestedMoves } from './components/SuggestedMoves'
 import { PopularOpenings } from './components/PopularOpenings'
 import { calculatePopularity, parseMovesString } from './utils/chessUtils'
 
+interface ChessState {
+  game: Chess
+  mode: ChessMode
+  openings: Opening[]
+  moveHistory: string[]
+  matchedOpening: Opening | null
+  fenToOpening: Map<string, Opening>
+  popularIndex: number
+  popularMovesIndex: number
+  isPlayingOpening: boolean
+  searchQuery: string
+  searchResults: Opening[]
+  boardOrientation: BoardOrientation
+  openingsLoaded: boolean
+}
+
+type ChessAction =
+  | { type: 'SET_GAME_STATE'; payload: { game: Chess; moveHistory: string[]; popularMovesIndex: number } }
+  | { type: 'SET_MODE'; payload: ChessMode }
+  | { type: 'SET_OPENINGS_DATA'; payload: { openings: Opening[]; fenToOpening: Map<string, Opening> } }
+  | { type: 'SET_MATCHED_OPENING'; payload: Opening | null }
+  | { type: 'SET_POPULAR_INDEX'; payload: number }
+  | { type: 'SET_IS_PLAYING_OPENING'; payload: boolean }
+  | { type: 'SET_SEARCH_QUERY'; payload: string }
+  | { type: 'SET_SEARCH_RESULTS'; payload: Opening[] }
+  | { type: 'SET_BOARD_ORIENTATION'; payload: BoardOrientation }
+  | { type: 'RESET_GAME' }
+  | { type: 'EXIT_OPENING_STUDY' }
+
+const initialState: ChessState = {
+  game: new Chess(),
+  mode: 'practice',
+  openings: [],
+  moveHistory: [],
+  matchedOpening: null,
+  fenToOpening: new Map(),
+  popularIndex: 0,
+  popularMovesIndex: 0,
+  isPlayingOpening: false,
+  searchQuery: '',
+  searchResults: [],
+  boardOrientation: 'white',
+  openingsLoaded: false
+}
+
+function chessReducer(state: ChessState, action: ChessAction): ChessState {
+  switch (action.type) {
+    case 'SET_GAME_STATE':
+      return {
+        ...state,
+        game: action.payload.game,
+        moveHistory: action.payload.moveHistory,
+        popularMovesIndex: action.payload.popularMovesIndex
+      }
+    case 'SET_MODE':
+      return { ...state, mode: action.payload }
+    case 'SET_OPENINGS_DATA':
+      return {
+        ...state,
+        openings: action.payload.openings,
+        fenToOpening: action.payload.fenToOpening,
+        openingsLoaded: true
+      }
+    case 'SET_MATCHED_OPENING':
+      return { ...state, matchedOpening: action.payload }
+    case 'SET_POPULAR_INDEX':
+      return { ...state, popularIndex: action.payload }
+    case 'SET_IS_PLAYING_OPENING':
+      return { ...state, isPlayingOpening: action.payload }
+    case 'SET_SEARCH_QUERY':
+      return { ...state, searchQuery: action.payload }
+    case 'SET_SEARCH_RESULTS':
+      return { ...state, searchResults: action.payload }
+    case 'SET_BOARD_ORIENTATION':
+      return { ...state, boardOrientation: action.payload }
+    case 'RESET_GAME':
+      return {
+        ...state,
+        game: new Chess(),
+        moveHistory: [],
+        matchedOpening: null,
+        popularMovesIndex: 0,
+        isPlayingOpening: false
+      }
+    case 'EXIT_OPENING_STUDY':
+      return {
+        ...state,
+        isPlayingOpening: false,
+        popularMovesIndex: 0
+      }
+    default:
+      return state
+  }
+}
+
 export default function ChessPractice() {
-  const [game, setGame] = useState(() => new Chess())
-  const [mode, setMode] = useState<ChessMode>('practice')
-  const [openings, setOpenings] = useState<Opening[]>([])
-  const [moveHistory, setMoveHistory] = useState<string[]>([])
-  const [matchedOpening, setMatchedOpening] = useState<Opening | null>(null)
-  const [fenToOpening, setFenToOpening] = useState<Map<string, Opening>>(new Map())
-
-  const [popularIndex, setPopularIndex] = useState(0)
-  const [popularMovesIndex, setPopularMovesIndex] = useState(0)
-  const [isPlayingOpening, setIsPlayingOpening] = useState(false)
-
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Opening[]>([])
-  const [boardOrientation, setBoardOrientation] = useState<BoardOrientation>('white')
+  const [state, dispatch] = useReducer(chessReducer, initialState)
 
   const logAction = useCallback((action: string, details?: any) => {
     console.log(`[ChessPractice] ${action}`, details || '')
   }, [])
 
-  const makeMove = useCallback((moveStr: string): boolean => {
-    try {
-      const g = new Chess(game.fen())
-      const move = g.move(moveStr)
+  // Unified function to update game state
+  const updateGameState = useCallback((game: Chess, safeIndex?: number) => {
+    const moveHistory = [...game.history()]
+    const popularMovesIndex = safeIndex ?? moveHistory.length
 
-      if (move) {
-        logAction('Programmatic move successful', { move: moveStr, san: move.san })
-        setGame(g)
-        setMoveHistory([...g.history()])
-        toast.success(`Played ${move.san}`)
+    dispatch({
+      type: 'SET_GAME_STATE',
+      payload: { game, moveHistory, popularMovesIndex }
+    })
+  }, [])
 
-        if (isPlayingOpening) {
-          logAction('Manual move during opening playback - resetting')
-          setIsPlayingOpening(false)
-          setPopularMovesIndex(0)
-          toast.info('Exited opening study mode')
-        }
-
-        return true
-      } else {
-        logAction('Programmatic move failed', { move: moveStr })
-        toast.error(`Invalid move: ${moveStr}`)
-        return false
-      }
-    } catch (error: any) {
-      const errorMessage = error?.message || String(error)
-      logAction('ERROR: Programmatic move exception', { move: moveStr, error: errorMessage })
-      toast.error(`Move failed: ${errorMessage}`)
-      return false
-    }
-  }, [game, isPlayingOpening, logAction])
-
+  // Initialize ECO data - only useEffect we keep
   useEffect(() => {
-    logAction('Initializing ECO data...')
+    if (state.openingsLoaded) return
 
+    logAction('Initializing ECO data...')
     try {
       const allEcoData = { ...ecoA, ...ecoB, ...ecoC, ...ecoD, ...ecoE }
       logAction('Combined ECO files', { totalEntries: Object.keys(allEcoData).length })
@@ -82,7 +145,6 @@ export default function ChessPractice() {
 
       Object.entries(allEcoData as Record<string, any>).forEach(([fen, data]) => {
         const movesArray = parseMovesString(data.moves || '')
-
         if (movesArray.length > 0) {
           const opening: Opening = {
             name: data.name || 'Unknown Opening',
@@ -95,7 +157,6 @@ export default function ChessPractice() {
             isEcoRoot: data.isEcoRoot || false,
             aliases: data.aliases || {}
           }
-
           mapped.push(opening)
           fenMap.set(fen, opening)
         }
@@ -107,108 +168,133 @@ export default function ChessPractice() {
         ecoRoots: mapped.filter(o => o.isEcoRoot).length
       })
 
-      setOpenings(mapped)
-      setFenToOpening(fenMap)
+      dispatch({
+        type: 'SET_OPENINGS_DATA',
+        payload: { openings: mapped, fenToOpening: fenMap }
+      })
+
       toast.success(`Loaded ${mapped.length} chess openings`)
     } catch (error: any) {
       const errorMessage = error?.message || String(error)
       logAction('ERROR: Failed to initialize ECO data', errorMessage)
       toast.error(`Failed to load openings: ${errorMessage}`)
     }
-  }, [logAction])
+  }, [state.openingsLoaded, logAction])
 
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([])
-      return
-    }
+  // Search results computation
+  const searchResults = useMemo(() => {
+    if (!state.searchQuery.trim()) return []
 
-    const query = searchQuery.toLowerCase()
-    const results = openings.filter(opening => {
+    const query = state.searchQuery.toLowerCase()
+    const results = state.openings.filter(opening => {
       if (opening.name.toLowerCase().includes(query)) return true
       if (opening.eco?.toLowerCase().includes(query)) return true
-
       const moveSequence = opening.moves.join(' ').toLowerCase()
       if (moveSequence.includes(query)) return true
-
       if (opening.aliases) {
         const aliasValues = Object.values(opening.aliases).join(' ').toLowerCase()
         if (aliasValues.includes(query)) return true
       }
-
       return false
     }).slice(0, 50)
 
     logAction('Search completed', { query, resultCount: results.length })
-    setSearchResults(results)
-  }, [searchQuery, openings, logAction])
+    return results
+  }, [state.searchQuery, state.openings, logAction])
 
+  // Update search results when they change
   useEffect(() => {
-    if (isPlayingOpening) {
-      logAction('Skipping automatic opening matching - in study mode')
-      return
-    }
+    dispatch({ type: 'SET_SEARCH_RESULTS', payload: searchResults })
+  }, [searchResults])
 
-    const currentFen = game.fen()
-    const hist = moveHistory
+  // Opening matching computation
+  const matchedOpening = useMemo(() => {
+    if (state.isPlayingOpening) return state.matchedOpening
+    if (state.moveHistory.length === 0) return null
 
-    if (hist.length === 0) {
-      setMatchedOpening(null)
-      return
-    }
+    const currentFen = state.game.fen()
 
-    let match = fenToOpening.get(currentFen)
+    // Try FEN match first
+    let match = state.fenToOpening.get(currentFen)
     if (match) {
       logAction('Opening matched by FEN', { name: match.name, eco: match.eco })
-      setMatchedOpening(match)
-      return
+      return match
     }
 
+    // Try position match
     const positionPart = currentFen.split(' ')
-    for (const [fen, opening] of fenToOpening.entries()) {
+    for (const [fen, opening] of state.fenToOpening.entries()) {
       if (fen.split(' ') === positionPart) {
         logAction('Opening matched by position', { name: opening.name, eco: opening.eco })
-        setMatchedOpening(opening)
-        return
+        return opening
       }
     }
 
-    const moveSequenceMatch = openings.find(o => {
-      if (o.moves.length < hist.length) return false
-      return hist.every((move, i) => o.moves[i] === move)
+    // Try move sequence match
+    const moveSequenceMatch = state.openings.find(o => {
+      if (o.moves.length < state.moveHistory.length) return false
+      return state.moveHistory.every((move, i) => o.moves[i] === move)
     })
 
     if (moveSequenceMatch) {
       logAction('Opening matched by move sequence', {
         name: moveSequenceMatch.name,
         eco: moveSequenceMatch.eco,
-        matchedMoves: hist.length,
+        matchedMoves: state.moveHistory.length,
         totalMoves: moveSequenceMatch.moves.length
       })
     } else {
-      logAction('No opening match found', { moveHistory: hist })
+      logAction('No opening match found', { moveHistory: state.moveHistory })
     }
 
-    setMatchedOpening(moveSequenceMatch || null)
-  }, [moveHistory, game, fenToOpening, openings, logAction, isPlayingOpening])
+    return moveSequenceMatch || null
+  }, [state.moveHistory, state.game, state.fenToOpening, state.openings, state.isPlayingOpening, state.matchedOpening, logAction])
 
-  const position = useMemo(() => game.fen(), [game])
+  // Update matched opening when it changes
+  useEffect(() => {
+    dispatch({ type: 'SET_MATCHED_OPENING', payload: matchedOpening })
+  }, [matchedOpening])
+
+  const makeMove = useCallback((moveStr: string): boolean => {
+    try {
+      const g = new Chess(state.game.fen())
+      const move = g.move(moveStr)
+      if (move) {
+        logAction('Programmatic move successful', { move: moveStr, san: move.san })
+        updateGameState(g)
+        toast.success(`Played ${move.san}`)
+
+        if (state.isPlayingOpening) {
+          logAction('Manual move during opening playback - resetting')
+          dispatch({ type: 'EXIT_OPENING_STUDY' })
+          toast.info('Exited opening study mode')
+        }
+        return true
+      } else {
+        logAction('Programmatic move failed', { move: moveStr })
+        toast.error(`Invalid move: ${moveStr}`)
+        return false
+      }
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error)
+      logAction('ERROR: Programmatic move exception', { move: moveStr, error: errorMessage })
+      toast.error(`Move failed: ${errorMessage}`)
+      return false
+    }
+  }, [state.game, state.isPlayingOpening, logAction, updateGameState])
 
   const onPieceDrop = useCallback((args: PieceDropHandlerArgs): boolean => {
     const { piece, sourceSquare, targetSquare } = args
-
     if (!targetSquare) {
       logAction('Invalid drop - no target square')
       return false
     }
 
     logAction('Attempting move', { from: sourceSquare, to: targetSquare, piece })
-
-    const g = new Chess(game.fen())
+    const g = new Chess(state.game.fen())
 
     try {
       const move = g.move({ from: sourceSquare, to: targetSquare, promotion: 'q' })
-
       if (!move) {
         logAction('Move rejected by chess.js', { from: sourceSquare, to: targetSquare })
         toast.error('Invalid move!')
@@ -222,18 +308,14 @@ export default function ChessPractice() {
         newFen: g.fen()
       })
 
-      setGame(g)
-      setMoveHistory([...g.history()])
+      updateGameState(g)
 
-      if (isPlayingOpening) {
+      if (state.isPlayingOpening) {
         logAction('User made manual move during opening playback - resetting')
-        setIsPlayingOpening(false)
-        setPopularMovesIndex(0)
+        dispatch({ type: 'EXIT_OPENING_STUDY' })
         toast.info('Exited opening study mode')
       }
-
       return true
-
     } catch (error: any) {
       const errorMessage = error?.message || String(error)
       logAction('ERROR: Invalid move attempted', {
@@ -244,25 +326,24 @@ export default function ChessPractice() {
       toast.error(`Invalid move: ${errorMessage}`)
       return false
     }
-  }, [game, isPlayingOpening, logAction])
+  }, [state.game, state.isPlayingOpening, logAction, updateGameState])
 
   const suggestions = useMemo(() => {
-    const matches = openings.filter(o => {
-      if (o.moves.length <= moveHistory.length) return false
-      if (moveHistory.length === 0) return true
-
-      for (let i = 0; i < moveHistory.length; i++) {
-        if (o.moves[i] !== moveHistory[i]) return false
+    const matches = state.openings.filter(o => {
+      if (o.moves.length <= state.moveHistory.length) return false
+      if (state.moveHistory.length === 0) return true
+      for (let i = 0; i < state.moveHistory.length; i++) {
+        if (o.moves[i] !== state.moveHistory[i]) return false
       }
       return true
     })
 
     const uniqueMoves = Array.from(new Set(
-      matches.map(m => m.moves[moveHistory.length]).filter(Boolean)
+      matches.map(m => m.moves[state.moveHistory.length]).filter(Boolean)
     ))
 
     const movesWithPopularity = uniqueMoves.map(move => {
-      const openingsWithMove = matches.filter(o => o.moves[moveHistory.length] === move)
+      const openingsWithMove = matches.filter(o => o.moves[state.moveHistory.length] === move)
       const avgPopularity = openingsWithMove.reduce((sum, o) => sum + o.popularity, 0) / openingsWithMove.length
       return { move, popularity: avgPopularity }
     })
@@ -270,27 +351,25 @@ export default function ChessPractice() {
     movesWithPopularity.sort((a, b) => b.popularity - a.popularity)
 
     logAction('Suggestions calculated', {
-      moveHistory,
+      moveHistory: state.moveHistory,
       matchCount: matches.length,
       suggestionCount: movesWithPopularity.length
     })
 
     return movesWithPopularity.slice(0, 8).map(item => item.move)
-  }, [moveHistory, openings, logAction])
+  }, [state.moveHistory, state.openings, logAction])
 
   const popularSorted = useMemo(() => {
-    let filteredOpenings = openings
-
-    if (moveHistory.length > 0) {
-      filteredOpenings = openings.filter(o => {
-        if (o.moves.length <= moveHistory.length) return false
-        return moveHistory.every((move, i) => o.moves[i] === move)
+    let filteredOpenings = state.openings
+    if (state.moveHistory.length > 0) {
+      filteredOpenings = state.openings.filter(o => {
+        if (o.moves.length <= state.moveHistory.length) return false
+        return state.moveHistory.every((move, i) => o.moves[i] === move)
       })
-
       logAction('Filtered openings by current position', {
-        originalCount: openings.length,
+        originalCount: state.openings.length,
         filteredCount: filteredOpenings.length,
-        moveHistory
+        moveHistory: state.moveHistory
       })
     }
 
@@ -305,7 +384,7 @@ export default function ChessPractice() {
         return 0
       })
       .slice(0, 100)
-  }, [openings, moveHistory, logAction])
+  }, [state.openings, state.moveHistory, logAction])
 
   const startPopularAt = useCallback((index: number) => {
     try {
@@ -324,54 +403,66 @@ export default function ChessPractice() {
       })
 
       const g = new Chess()
-      setPopularIndex(index)
-      setPopularMovesIndex(0)
-      setGame(g)
-      setMoveHistory([])
-      setMatchedOpening(chosen)
-      setIsPlayingOpening(true)
-      setMode('popular')
+      dispatch({ type: 'SET_POPULAR_INDEX', payload: index })
+      dispatch({ type: 'SET_MATCHED_OPENING', payload: chosen })
+      dispatch({ type: 'SET_IS_PLAYING_OPENING', payload: true })
+      dispatch({ type: 'SET_MODE', payload: 'popular' })
+      updateGameState(g, 0)
 
       toast.success(`Started studying: ${chosen.name}`)
-
     } catch (error: any) {
       const errorMessage = error?.message || String(error)
       logAction('ERROR: Failed to start popular opening', { index, error: errorMessage })
       toast.error(`Failed to start opening: ${errorMessage}`)
     }
-  }, [popularSorted, logAction])
+  }, [popularSorted, logAction, updateGameState])
 
-  const startSearchResult = useCallback((opening: Opening) => {
+  const startSearchResult = useCallback((opening: Opening, resumeAtLastPosition: boolean = true) => {
     try {
       logAction('Starting opening from search', {
         name: opening.name,
         eco: opening.eco,
-        totalMoves: opening.moves.length
+        totalMoves: opening.moves.length,
+        resumeAtLastPosition
       })
 
       const g = new Chess()
-      setGame(g)
-      setMoveHistory([])
-      setMatchedOpening(opening)
-      setIsPlayingOpening(true)
-      setPopularMovesIndex(0)
+      const targetIndex = resumeAtLastPosition ? opening.moves.length : 0
+
+      // Play moves up to target position
+      for (let i = 0; i < targetIndex; i++) {
+        if (i < opening.moves.length) {
+          const move = g.move(opening.moves[i])
+          if (!move) {
+            logAction('ERROR: Failed to apply move during opening start', {
+              moveIndex: i,
+              move: opening.moves[i]
+            })
+            break
+          }
+        }
+      }
+
+      dispatch({ type: 'SET_MATCHED_OPENING', payload: opening })
+      dispatch({ type: 'SET_IS_PLAYING_OPENING', payload: true })
+      dispatch({ type: 'SET_MODE', payload: 'popular' })
 
       const index = popularSorted.findIndex(o => o.fen === opening.fen)
-      setPopularIndex(Math.max(0, index))
-      setMode('popular')
+      dispatch({ type: 'SET_POPULAR_INDEX', payload: Math.max(0, index) })
 
-      toast.success(`Started studying: ${opening.name}`)
+      updateGameState(g, targetIndex)
 
+      toast.success(`Started studying: ${opening.name}${resumeAtLastPosition ? ' (at final position)' : ''}`)
     } catch (error: any) {
       const errorMessage = error?.message || String(error)
       logAction('ERROR: Failed to start opening from search', { opening: opening.name, error: errorMessage })
       toast.error(`Failed to start opening: ${errorMessage}`)
     }
-  }, [popularSorted, logAction])
+  }, [popularSorted, logAction, updateGameState])
 
   const navigateToMove = useCallback((targetIndex: number) => {
     try {
-      const chosen = matchedOpening || popularSorted[popularIndex]
+      const chosen = state.matchedOpening || popularSorted[state.popularIndex]
       if (!chosen) {
         logAction('Cannot navigate - no opening selected')
         toast.error('No opening selected')
@@ -385,7 +476,7 @@ export default function ChessPractice() {
         targetIndex,
         safeIndex,
         maxMoves,
-        currentIndex: popularMovesIndex
+        currentIndex: state.popularMovesIndex
       })
 
       const g = new Chess()
@@ -402,31 +493,24 @@ export default function ChessPractice() {
         }
       }
 
-      setGame(g)
-      setMoveHistory([...g.history()])
-      setPopularMovesIndex(safeIndex)
+      updateGameState(g, safeIndex)
+
       if (safeIndex === 0) {
         toast.info('Moved to start position')
       } else {
         toast.info(`Moved to ${chosen.moves[safeIndex - 1]}`)
       }
-
     } catch (error: any) {
       const errorMessage = error?.message || String(error)
       logAction('ERROR: Exception during navigation', { targetIndex, error: errorMessage })
       toast.error(`Navigation failed: ${errorMessage}`)
     }
-  }, [matchedOpening, popularSorted, popularIndex, popularMovesIndex, logAction])
+  }, [state.matchedOpening, popularSorted, state.popularIndex, state.popularMovesIndex, logAction, updateGameState])
 
   const resetGame = useCallback(() => {
     try {
       logAction('Resetting game')
-      const g = new Chess()
-      setGame(g)
-      setMoveHistory([])
-      setMatchedOpening(null)
-      setPopularMovesIndex(0)
-      setIsPlayingOpening(false)
+      dispatch({ type: 'RESET_GAME' })
       logAction('Game reset successful')
       toast.success('Game reset')
     } catch (error: any) {
@@ -436,22 +520,43 @@ export default function ChessPractice() {
     }
   }, [logAction])
 
+  const handleSearchQueryChange = useCallback((query: string) => {
+    dispatch({ type: 'SET_SEARCH_QUERY', payload: query })
+  }, [])
+
+  const handleModeChange = useCallback((mode: ChessMode) => {
+    dispatch({ type: 'SET_MODE', payload: mode })
+  }, [])
+
+  const handleSetIsPlayingOpening = useCallback((isPlaying: boolean) => {
+    dispatch({ type: 'SET_IS_PLAYING_OPENING', payload: isPlaying })
+  }, [])
+
+  const handleBoardOrientationChange = useCallback((orientation: BoardOrientation) => {
+    dispatch({ type: 'SET_BOARD_ORIENTATION', payload: orientation })
+  }, [])
+
   return (
     <div className="flex flex-col lg:flex-row gap-4">
       <ChessBoard
-        position={position}
-        boardOrientation={boardOrientation}
+        position={state.game.fen()}
+        boardOrientation={state.boardOrientation}
         onPieceDrop={onPieceDrop}
-        game={game}
-      />
-
-      <div className="flex-1 space-y-4 min-w-0 max-w-2xl">
-        <BoardOrientationControl
-          boardOrientation={boardOrientation}
-          setBoardOrientation={setBoardOrientation}
+        game={state.game}
+      >
+        <OpeningControls
+          isPlayingOpening={state.isPlayingOpening}
+          matchedOpening={state.matchedOpening}
+          popularMovesIndex={state.popularMovesIndex}
+          onNavigate={navigateToMove}
+          gameHistoryLength={state.moveHistory.length}
+          boardOrientation={state.boardOrientation}
+          setBoardOrientation={handleBoardOrientationChange}
           logAction={logAction}
         />
+      </ChessBoard>
 
+      <div className="flex-1 space-y-4 min-w-0 max-w-2xl">
         <SuggestedMoves
           suggestions={suggestions}
           makeMove={makeMove}
@@ -461,44 +566,35 @@ export default function ChessPractice() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Training Mode</h2>
             <ModeSelector
-              mode={mode}
-              setMode={setMode}
-              setIsPlayingOpening={setIsPlayingOpening}
+              mode={state.mode}
+              setMode={handleModeChange}
+              setIsPlayingOpening={handleSetIsPlayingOpening}
               resetGame={resetGame}
               logAction={logAction}
             />
           </div>
-
           <GameStatus
-            isPlayingOpening={isPlayingOpening}
-            matchedOpening={matchedOpening}
-            popularMovesIndex={popularMovesIndex}
-            moveHistory={moveHistory}
-            openingsCount={openings.length}
+            isPlayingOpening={state.isPlayingOpening}
+            matchedOpening={state.matchedOpening}
+            popularMovesIndex={state.popularMovesIndex}
+            moveHistory={state.moveHistory}
+            openingsCount={state.openings.length}
             onStudyOpening={startSearchResult}
-          />
-
-          <OpeningControls
-            isPlayingOpening={isPlayingOpening}
-            matchedOpening={matchedOpening}
-            popularMovesIndex={popularMovesIndex}
-            onNavigate={navigateToMove}
-            gameHistoryLength={moveHistory.length}
           />
         </div>
 
-        {mode === 'search' && (
+        {state.mode === 'search' && (
           <SearchOpenings
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            searchResults={searchResults}
+            searchQuery={state.searchQuery}
+            setSearchQuery={handleSearchQueryChange}
+            searchResults={state.searchResults}
             startSearchResult={startSearchResult}
           />
         )}
 
-        {mode === 'popular' && (
+        {state.mode === 'popular' && (
           <PopularOpenings
-            moveHistory={moveHistory}
+            moveHistory={state.moveHistory}
             popularSorted={popularSorted}
             startPopularAt={startPopularAt}
           />

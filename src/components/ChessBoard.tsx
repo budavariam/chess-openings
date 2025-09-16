@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Children } from 'react'
 import { Chessboard, PieceDropHandlerArgs } from 'react-chessboard'
 import { getLastMove } from '../utils/chessUtils'
 import type { BoardOrientation } from '../types'
@@ -7,19 +7,20 @@ interface ChessBoardProps {
   position: string
   boardOrientation: BoardOrientation
   onPieceDrop: (args: PieceDropHandlerArgs) => boolean
-  game: any
+  game: any,
+  children: React.ReactNode
 }
 
-export function ChessBoard({ position, boardOrientation, onPieceDrop, game }: ChessBoardProps) {
+export function ChessBoard({ position, boardOrientation, onPieceDrop, game, children }: ChessBoardProps) {
   const lastMove = getLastMove(game)
 
   return (
     <div className="flex justify-center lg:justify-start">
       <div
-        className="shadow-xl rounded-2xl overflow-hidden bg-white dark:bg-gray-800 p-3"
-        style={{ width: '380px', height: '380px' }}
+        className="shadow-xl rounded-2xl overflow-auto bg-white dark:bg-gray-800 p-3"
       >
         <Chessboard
+          style={{ width: '380px', height: '380px' }}
           options={{
             boardOrientation: boardOrientation,
             position: position,
@@ -38,6 +39,7 @@ export function ChessBoard({ position, boardOrientation, onPieceDrop, game }: Ch
             } : {}
           }}
         />
+        {children}
       </div>
     </div>
   )

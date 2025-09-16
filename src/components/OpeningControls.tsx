@@ -1,5 +1,7 @@
 import React from 'react'
 import type { Opening } from '../types'
+import type { BoardOrientation } from '../types'
+import { toast } from 'react-toastify'
 
 interface OpeningControlsProps {
   isPlayingOpening: boolean
@@ -7,6 +9,9 @@ interface OpeningControlsProps {
   popularMovesIndex: number
   onNavigate: (index: number) => void
   gameHistoryLength?: number
+  boardOrientation: BoardOrientation
+  setBoardOrientation: (orientation: BoardOrientation) => void
+  logAction: (action: string, details?: any) => void
 }
 
 type NavigationAction = 'start' | 'back' | 'forward' | 'end'
@@ -16,13 +21,22 @@ export function OpeningControls({
   matchedOpening,
   popularMovesIndex,
   onNavigate,
-  gameHistoryLength = 0
+  gameHistoryLength = 0,
+  boardOrientation,
+  setBoardOrientation,
+  logAction
 }: OpeningControlsProps) {
-  // Unified navigation logic
+
+  const handleOrientationChange = (orientation: BoardOrientation) => {
+    setBoardOrientation(orientation)
+    logAction(`Board orientation changed to ${orientation}`)
+    toast.info(`Board flipped to ${orientation} perspective`)
+  }
+
   const handleNavigation = (action: NavigationAction) => {
     const maxMoves = matchedOpening?.moves?.length || 0
     const maxIndex = Math.max(maxMoves, gameHistoryLength)
-    
+
     switch (action) {
       case 'start':
         onNavigate(0)
@@ -43,24 +57,24 @@ export function OpeningControls({
   const navigationButtons = [
     {
       id: 'start',
-      label: '⏮ Start',
+      label: '⏮',
       action: 'start' as NavigationAction,
       disabled: popularMovesIndex === 0,
       title: 'Go to start'
     },
     {
       id: 'back',
-      label: '⏪ Back',
+      label: '⏪',
       action: 'back' as NavigationAction,
       disabled: popularMovesIndex === 0,
       title: 'Previous move'
     },
     {
       id: 'forward',
-      label: '⏩ Forward',
+      label: '⏩',
       action: 'forward' as NavigationAction,
       disabled: popularMovesIndex >= Math.max(
-        matchedOpening?.moves?.length || 0, 
+        matchedOpening?.moves?.length || 0,
         gameHistoryLength
       ),
       title: 'Next move',
@@ -68,75 +82,47 @@ export function OpeningControls({
     },
     {
       id: 'end',
-      label: '⏭ End',
+      label: '⏭',
       action: 'end' as NavigationAction,
       disabled: false,
       title: 'Go to end'
     }
-  ]
+  ] as const
 
-  // Development debug info
-  if (!isPlayingOpening || !matchedOpening) {
-    if (import.meta.env.DEV) {
-      return (
-        <div className="mt-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800 text-xs">
-          <div>Debug: Controls not showing</div>
-          <div>• isPlayingOpening: {String(isPlayingOpening)}</div>
-          <div>• hasMatchedOpening: {String(!!matchedOpening)}</div>
-          <div>• popularMovesIndex: {popularMovesIndex}</div>
-          <div>• gameHistoryLength: {gameHistoryLength}</div>
-        </div>
-      )
-    }
-    return null
-  }
-
-  const currentMoves = matchedOpening.moves || []
+  const hideControls = !isPlayingOpening || !matchedOpening
+  const currentMoves = matchedOpening?.moves || []
   const hasNextMove = popularMovesIndex < currentMoves.length
-  
-  return (
-    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-      <div className="text-sm font-medium mb-3 text-blue-900 dark:text-blue-100">
-        Opening Controls
-      </div>
 
-      {/* Unified Navigation Buttons */}
+  return (
+    <div className="mt-4 p-4  rounded-lg border border-blue-200 dark:border-blue-800">
       <div className="flex gap-2 justify-center mb-3 flex-wrap">
         {navigationButtons.map((button) => (
           <button
             key={button.id}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-              button.primary
-                ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400'
-                : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${button.primary
+              ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400'
+              : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={() => handleNavigation(button.action)}
-            disabled={button.disabled}
+            disabled={button.disabled || hideControls}
             title={button.title}
           >
-            {button.label}
+            {button.id === "forward" && hasNextMove ? currentMoves[popularMovesIndex] : button.label}
           </button>
         ))}
+        <button
+          className="px-3 py-1 rounded text-sm border bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 cursor-pointer"
+          onClick={() => handleOrientationChange(boardOrientation === 'white' ? 'black' : 'white')}
+        >
+          {boardOrientation === 'white' ? "♔ White" : "♚ Black"}
+        </button>
       </div>
 
-      {/* Move Progress Indicator */}
-      <div className="flex justify-center mb-3">
+      <div className="flex justify-center">
         <div className="text-xs text-gray-600 dark:text-gray-400">
-          Move {popularMovesIndex} of {Math.max(currentMoves.length, gameHistoryLength)}
+          {popularMovesIndex} / {Math.max(currentMoves.length, gameHistoryLength)}
         </div>
       </div>
-
-      {/* Next Move Display */}
-      {hasNextMove && (
-        <div className="text-center">
-          <div className="text-sm text-blue-700 dark:text-blue-300 mb-1">
-            Next move:
-          </div>
-          <div className="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg font-mono text-lg">
-            {currentMoves[popularMovesIndex]}
-          </div>
-        </div>
-      )}
 
       {/* Development Debug Info */}
       {import.meta.env.DEV && (
@@ -145,14 +131,24 @@ export function OpeningControls({
             Debug Info
           </summary>
           <div className="mt-2 space-y-1 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-            <div>Opening: {matchedOpening.name}</div>
-            <div>Moves count: {currentMoves.length}</div>
-            <div>Current index: {popularMovesIndex}</div>
-            <div>Game history: {gameHistoryLength}</div>
-            <div>Has next: {String(hasNextMove)}</div>
+            {(hideControls) && <>
+              <div>Debug: Controls not showing</div>
+              <div>• isPlayingOpening: {String(isPlayingOpening)}</div>
+              <div>• hasMatchedOpening: {String(!!matchedOpening)}</div>
+              <div>• popularMovesIndex: {popularMovesIndex}</div>
+              <div>• gameHistoryLength: {gameHistoryLength}</div>
+            </>}
+            {(!hideControls) && <>
+              <div>Opening: {matchedOpening.name}</div>
+              <div>Moves count: {currentMoves.length}</div>
+              <div>Current index: {popularMovesIndex}</div>
+              <div>Game history: {gameHistoryLength}</div>
+              <div>Has next: {String(hasNextMove)}</div>
+            </>}
           </div>
         </details>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
