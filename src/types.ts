@@ -10,7 +10,7 @@ export type Opening = {
   aliases?: Record<string, string>
 }
 
-export type ChessMode = 'practice' | 'popular' | 'search'
+export type ChessMode = 'practice' | 'popular' | 'search' | 'favourites'
 
 export type BoardOrientation = 'white' | 'black'
 

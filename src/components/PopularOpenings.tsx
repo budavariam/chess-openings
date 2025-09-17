@@ -5,57 +5,94 @@ interface PopularOpeningsProps {
   moveHistory: string[]
   popularSorted: Opening[]
   startPopularAt: (index: number) => void
+  toggleFavourite: (openingId: string) => void
+  favouriteIds: string[]
 }
 
-export function PopularOpenings({ moveHistory, popularSorted, startPopularAt }: PopularOpeningsProps) {
+export const PopularOpenings: React.FC<PopularOpeningsProps> = ({
+  moveHistory,
+  popularSorted,
+  startPopularAt,
+  toggleFavourite,
+  favouriteIds
+}) => {
+  const getOpeningId = (opening: Opening) => opening.fen || opening.eco || opening.name
+
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
-      <h3 className="font-medium mb-2 text-gray-900 dark:text-white">
-        {moveHistory.length > 0 ? 'Opening Continuations' : 'Popular Openings'}
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        Popular Openings
+        {moveHistory.length > 0 && (
+          <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+            (filtered by current position)
+          </span>
+        )}
       </h3>
-      {moveHistory.length > 0 && (
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-          Showing openings that continue from: {moveHistory.join(' ')}
-        </div>
-      )}
-      <div className="space-y-2 max-h-64 overflow-auto">
-        {popularSorted.slice(0, 50).map((o, i) => (
-          <div key={i} className="flex items-center justify-between p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
-                <span>{o.eco}</span>
-                {o.src && (
-                  <span className="text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">
-                    {o.src}
+      
+      <div className="space-y-2 max-h-96 overflow-y-auto">
+        {popularSorted.slice(0, 20).map((opening, index) => {
+          const openingId = getOpeningId(opening)
+          const isFavourite = favouriteIds.includes(openingId)
+          
+          return (
+            <div
+              key={openingId}
+              className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-mono text-gray-400 dark:text-gray-500 w-6">
+                    {index + 1}.
                   </span>
-                )}
-                {o.isEcoRoot && (
-                  <span className="text-xs bg-blue-200 dark:bg-blue-600 px-1 rounded">
-                    ROOT
+                  <h4 className="font-medium text-gray-900 dark:text-white truncate">
+                    {opening.name}
+                  </h4>
+                  {opening.eco && (
+                    <span className="px-2 py-1 text-xs font-mono bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                      {opening.eco}
+                    </span>
+                  )}
+                  <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+                    {opening.popularity.toFixed(1)}%
                   </span>
-                )}
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-8">
+                  {opening.moves.slice(0, 6).join(' ')}
+                  {opening.moves.length > 6 && '...'}
+                  <span className="ml-2 text-xs">
+                    ({opening.moves.length} moves)
+                  </span>
+                </p>
               </div>
-              <div className="font-medium truncate text-gray-900 dark:text-white">{o.name}</div>
-              <div className="text-xs text-gray-500">
-                {moveHistory.length > 0 ?
-                  // Show continuation moves
-                  `...${o.moves.slice(moveHistory.length, moveHistory.length + 3).join(' ')}` :
-                  // Show opening moves
-                  `${o.moves.slice(0, 3).join(' ')}...`
-                } ({o.moves.length} moves)
+              
+              <div className="flex items-center gap-2 ml-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleFavourite(openingId)
+                  }}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isFavourite
+                      ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                      : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  title="Toggle favourite"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </button>
+                
+                <button
+                  onClick={() => startPopularAt(index)}
+                  className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                >
+                  📚 Study
+                </button>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-gray-400">{o.popularity}</span>
-              <button
-                className="px-3 py-1 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-                onClick={() => startPopularAt(i)}
-              >
-                📚 Study
-              </button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import React from 'react'
+import { ExternalExplorer } from './ExternalExplorer'
 import type { Opening } from '../types'
 
 interface GameStatusProps {
@@ -8,6 +9,7 @@ interface GameStatusProps {
   moveHistory: string[]
   openingsCount: number
   onStudyOpening?: (opening: Opening) => void
+  logAction: (action: string, details?: any) => void
 }
 
 export function GameStatus({
@@ -16,7 +18,8 @@ export function GameStatus({
   popularMovesIndex,
   moveHistory,
   openingsCount,
-  onStudyOpening
+  onStudyOpening,
+  logAction
 }: GameStatusProps) {
   const currentOpeningProgress = matchedOpening
     ? `${popularMovesIndex}/${matchedOpening.moves.length}`
@@ -61,7 +64,7 @@ export function GameStatus({
             )}
           </div>
           {matchedOpening ? (
-            <div>
+            <div className="space-y-2">
               <div className="text-sm text-gray-400 flex gap-2 flex-wrap">
                 <span>{matchedOpening.eco}</span>
                 {matchedOpening.src && (
@@ -76,7 +79,18 @@ export function GameStatus({
                 )}
               </div>
               <div className="font-semibold text-gray-900 dark:text-white">{matchedOpening.name}</div>
-              <div className="italic text-gray-900 dark:text-white">{matchedOpening.moves.join(" ")}</div>
+              <div className="italic text-gray-900 dark:text-white text-sm break-words">
+                {matchedOpening.moves.join(" ")}
+              </div>
+              
+              {/* External Explorer Buttons */}
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
+                <ExternalExplorer 
+                  matchedOpening={matchedOpening}
+                  popularMovesIndex={popularMovesIndex}
+                  logAction={logAction}
+                />
+              </div>
             </div>
           ) : (
             <div className="text-gray-500">No match</div>

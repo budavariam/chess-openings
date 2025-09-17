@@ -8,7 +8,6 @@ import ecoC from './eco.json/ecoC.json'
 import ecoD from './eco.json/ecoD.json'
 import ecoE from './eco.json/ecoE.json'
 import type { Opening, ChessMode, BoardOrientation } from './types'
-import { BoardOrientationControl } from './components/BoardOrientation'
 import { ChessBoard } from './components/ChessBoard'
 import { ModeSelector } from './components/ModeSelector'
 import { GameStatus } from './components/GameStatus'
@@ -16,6 +15,7 @@ import { OpeningControls } from './components/OpeningControls'
 import { SearchOpenings } from './components/SearchOpenings'
 import { SuggestedMoves } from './components/SuggestedMoves'
 import { PopularOpenings } from './components/PopularOpenings'
+import { FavouriteOpenings } from './components/FavouriteOpenings'
 import { calculatePopularity, parseMovesString } from './utils/chessUtils'
 
 interface ChessState {
@@ -32,6 +32,7 @@ interface ChessState {
   searchResults: Opening[]
   boardOrientation: BoardOrientation
   openingsLoaded: boolean
+  favouriteIds: string[]
 }
 
 type ChessAction =
@@ -44,24 +45,9 @@ type ChessAction =
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_SEARCH_RESULTS'; payload: Opening[] }
   | { type: 'SET_BOARD_ORIENTATION'; payload: BoardOrientation }
+  | { type: 'SET_FAVOURITE_IDS'; payload: string[] }
   | { type: 'RESET_GAME' }
   | { type: 'EXIT_OPENING_STUDY' }
-
-const initialState: ChessState = {
-  game: new Chess(),
-  mode: 'practice',
-  openings: [],
-  moveHistory: [],
-  matchedOpening: null,
-  fenToOpening: new Map(),
-  popularIndex: 0,
-  popularMovesIndex: 0,
-  isPlayingOpening: false,
-  searchQuery: '',
-  searchResults: [],
-  boardOrientation: 'white',
-  openingsLoaded: false
-}
 
 function chessReducer(state: ChessState, action: ChessAction): ChessState {
   switch (action.type) {
@@ -93,6 +79,8 @@ function chessReducer(state: ChessState, action: ChessAction): ChessState {
       return { ...state, searchResults: action.payload }
     case 'SET_BOARD_ORIENTATION':
       return { ...state, boardOrientation: action.payload }
+    case 'SET_FAVOURITE_IDS':
+      return { ...state, favouriteIds: action.payload }
     case 'RESET_GAME':
       return {
         ...state,
@@ -114,11 +102,82 @@ function chessReducer(state: ChessState, action: ChessAction): ChessState {
 }
 
 export default function ChessPractice() {
-  const [state, dispatch] = useReducer(chessReducer, initialState)
+  // Initialize with lazy loading of favorites from localStorage
+  const [state, dispatch] = useReducer(chessReducer, undefined, () => {
+    let favouriteIds: string[] = []
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('chess-opening-favourites')
+        favouriteIds = saved ? JSON.parse(saved) : []
+      }
+    } catch (error) {
+      console.error('Failed to load favorites from localStorage:', error)
+    }
+
+    return {
+      game: new Chess(),
+      mode: 'practice' as ChessMode,
+      openings: [],
+      moveHistory: [],
+      matchedOpening: null,
+      fenToOpening: new Map(),
+      popularIndex: 0,
+      popularMovesIndex: 0,
+      isPlayingOpening: false,
+      searchQuery: '',
+      searchResults: [],
+      boardOrientation: 'white' as BoardOrientation,
+      openingsLoaded: false,
+      favouriteIds
+    }
+  })
 
   const logAction = useCallback((action: string, details?: any) => {
     console.log(`[ChessPractice] ${action}`, details || '')
   }, [])
+
+  // Save favorites to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('chess-opening-favourites', JSON.stringify(state.favouriteIds))
+      logAction('Saved favorites to localStorage', { count: state.favouriteIds.length })
+    } catch (error: any) {
+      logAction('ERROR: Failed to save favorites to localStorage', error.message)
+    }
+  }, [state.favouriteIds, logAction])
+
+  // Toggle favorite function
+  const toggleFavourite = useCallback((openingId: string) => {
+    try {
+      const isCurrentlyFavourite = state.favouriteIds.includes(openingId)
+      let newFavouriteIds: string[]
+
+      if (isCurrentlyFavourite) {
+        // Remove from favorites
+        newFavouriteIds = state.favouriteIds.filter(id => id !== openingId)
+        logAction('Removed from favorites', { openingId })
+        toast.info('Removed from favorites')
+      } else {
+        // Add to favorites
+        newFavouriteIds = [...state.favouriteIds, openingId]
+        logAction('Added to favorites', { openingId })
+        toast.success('Added to favorites')
+      }
+
+      dispatch({ type: 'SET_FAVOURITE_IDS', payload: newFavouriteIds })
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error)
+      logAction('ERROR: Failed to toggle favorite', { openingId, error: errorMessage })
+      toast.error(`Failed to toggle favorite: ${errorMessage}`)
+    }
+  }, [state.favouriteIds, logAction])
+
+  // Get favorite openings
+  const favouriteOpenings = useMemo(() => {
+    return state.openings.filter(opening =>
+      state.favouriteIds.includes(opening.fen || opening.eco || opening.name)
+    ).sort((a, b) => b.popularity - a.popularity)
+  }, [state.openings, state.favouriteIds])
 
   // Unified function to update game state
   const updateGameState = useCallback((game: Chess, safeIndex?: number) => {
@@ -543,7 +602,16 @@ export default function ChessPractice() {
         boardOrientation={state.boardOrientation}
         onPieceDrop={onPieceDrop}
         game={state.game}
+        // position={state.game.fen()}
+        // boardOrientation={state.boardOrientation}
+        // onPieceDrop={onPieceDrop}
+        // game={state.game}
+        // boardTheme={state.boardTheme}
+        // showCoordinates={state.showCoordinates}
+        // onThemeChange={handleThemeChange}
+        // onCoordinatesToggle={handleCoordinatesToggle}
       >
+
         <OpeningControls
           isPlayingOpening={state.isPlayingOpening}
           matchedOpening={state.matchedOpening}
@@ -580,6 +648,7 @@ export default function ChessPractice() {
             moveHistory={state.moveHistory}
             openingsCount={state.openings.length}
             onStudyOpening={startSearchResult}
+            logAction={logAction}
           />
         </div>
 
@@ -589,6 +658,8 @@ export default function ChessPractice() {
             setSearchQuery={handleSearchQueryChange}
             searchResults={state.searchResults}
             startSearchResult={startSearchResult}
+            toggleFavourite={toggleFavourite}
+            favouriteIds={state.favouriteIds}
           />
         )}
 
@@ -597,6 +668,17 @@ export default function ChessPractice() {
             moveHistory={state.moveHistory}
             popularSorted={popularSorted}
             startPopularAt={startPopularAt}
+            toggleFavourite={toggleFavourite}
+            favouriteIds={state.favouriteIds}
+          />
+        )}
+
+        {state.mode === 'favourites' && (
+          <FavouriteOpenings
+            favouriteOpenings={favouriteOpenings}
+            startSearchResult={startSearchResult}
+            toggleFavourite={toggleFavourite}
+            favouriteIds={state.favouriteIds}
           />
         )}
       </div>
