@@ -9,6 +9,57 @@ interface ExternalExplorerProps {
     logAction: (action: string, details?: any) => void
 }
 
+// Reusable button component
+interface ResponsiveButtonProps {
+    onClick: () => void
+    className: string
+    title?: string
+    children: React.ReactNode
+}
+
+const ResponsiveButton: React.FC<ResponsiveButtonProps> = ({ onClick, className, title, children }) => (
+    <button
+        onClick={onClick}
+        className={`px-3 py-1.5 sm:py-1.5 py-2 text-sm rounded-md font-medium transition-colors ${className}`}
+        title={title}
+    >
+        {children}
+    </button>
+)
+
+// Reusable responsive button container
+interface ResponsiveButtonGroupProps {
+    label: string
+    children: React.ReactNode
+    mobileLayout?: 'stack' | 'grid'
+}
+
+const ResponsiveButtonGroup: React.FC<ResponsiveButtonGroupProps> = ({
+    label,
+    children,
+    mobileLayout = 'stack'
+}) => (
+    <div className="space-y-2">
+        <span className="block text-sm text-gray-600 dark:text-gray-400 font-medium">
+            {label}
+        </span>
+        {/* Desktop - horizontal layout */}
+        <div className="hidden sm:flex items-center gap-2 flex-wrap">
+            {children}
+        </div>
+        {/* Mobile - configurable layout */}
+        <div className={`sm:hidden ${mobileLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-2'}`}>
+            {React.Children.map(children, (child) =>
+                React.isValidElement(child)
+                    ? React.cloneElement(child, {
+                        className: `${child.props.className} ${mobileLayout === 'stack' ? 'w-full' : ''}`
+                    })
+                    : child
+            )}
+        </div>
+    </div>
+)
+
 export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
     matchedOpening,
     popularMovesIndex,
@@ -31,7 +82,6 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
         }
 
         const moves = matchedOpening.moves.slice(0, popularMovesIndex || matchedOpening.moves.length)
-        console.log("Moves to send:", moves, matchedOpening.moves);
         let url: string
 
         switch (site) {
@@ -129,11 +179,10 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
                         }
                     }
 
-                    // Create PGN with headers
                     const pgn = [
                         `[Event "${matchedOpening.name}"]`,
                         `[Site "Chess Practice App"]`,
-                        `[Date "${new Date().toISOString().split('T')}"]`,
+                        `[Date "${new Date().toISOString().split('T')[0]}"]`,
                         `[White "Study"]`,
                         `[Black "Opening"]`,
                         `[Result "*"]`,
@@ -158,7 +207,6 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
                     break
 
                 case 'uci':
-                    // UCI format for engine analysis (long algebraic notation)
                     const gameForUci = new Chess()
                     const uciMoves: string[] = []
 
@@ -196,74 +244,69 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
         return null
     }
 
+    // Shared button styles
+    const primaryButtonStyle = "bg-green-600 text-white hover:bg-green-700"
+    const secondaryButtonStyle = "border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600"
+    const blueButtonStyle = "bg-blue-600 text-white hover:bg-blue-700"
+
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {/* External Explorers */}
-            <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                    Explore:
-                </span>
-                <div className="flex gap-2">
-                    <button
-                        onClick={() => openInExplorer('chess.com')}
-                        className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium cursor-pointer"
-                        title="Open in Chess.com analysis board"
-                    >
-                        Chess.com
-                    </button>
-                    <button
-                        onClick={() => openInExplorer('lichess')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
-                        title="Copy moves for Lichess (opens analysis page)"
-                    >
-                        Lichess
-                    </button>
-                    <button
-                        onClick={() => openInExplorer('365chess')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
-                        title="Copy moves for 365chess (opens main page)"
-                    >
-                        365chess
-                    </button>
-                </div>
-            </div>
+            <ResponsiveButtonGroup label="Explore:" mobileLayout="stack">
+                <ResponsiveButton
+                    onClick={() => openInExplorer('chess.com')}
+                    className={primaryButtonStyle}
+                    title="Open in Chess.com analysis board"
+                >
+                    Chess.com
+                </ResponsiveButton>
+                <ResponsiveButton
+                    onClick={() => openInExplorer('lichess')}
+                    className={secondaryButtonStyle}
+                    title="Copy moves for Lichess (opens analysis page)"
+                >
+                    Lichess
+                </ResponsiveButton>
+                <ResponsiveButton
+                    onClick={() => openInExplorer('365chess')}
+                    className={secondaryButtonStyle}
+                    title="Copy moves for 365chess (opens main page)"
+                >
+                    365chess
+                </ResponsiveButton>
+            </ResponsiveButtonGroup>
 
             {/* Export Options */}
-            <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                    Export:
-                </span>
-                <div className="flex gap-2 flex-wrap">
-                    <button
-                        onClick={() => exportData('pgn')}
-                        className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium cursor-pointer"
-                        title="Export as PGN (complete game data)"
-                    >
-                        PGN
-                    </button>
-                    <button
-                        onClick={() => exportData('san')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
-                        title="Copy moves in Standard Algebraic Notation"
-                    >
-                        SAN
-                    </button>
-                    <button
-                        onClick={() => exportData('fen')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
-                        title="Copy position in Forsyth-Edwards Notation"
-                    >
-                        FEN
-                    </button>
-                    <button
-                        onClick={() => exportData('uci')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
-                        title="Export for chess engines (UCI format)"
-                    >
-                        UCI
-                    </button>
-                </div>
-            </div>
+            <ResponsiveButtonGroup label="Export:" mobileLayout="grid">
+                <ResponsiveButton
+                    onClick={() => exportData('pgn')}
+                    className={blueButtonStyle}
+                    title="Export as PGN (complete game data)"
+                >
+                    PGN
+                </ResponsiveButton>
+                <ResponsiveButton
+                    onClick={() => exportData('san')}
+                    className={secondaryButtonStyle}
+                    title="Copy moves in Standard Algebraic Notation"
+                >
+                    SAN
+                </ResponsiveButton>
+                <ResponsiveButton
+                    onClick={() => exportData('fen')}
+                    className={secondaryButtonStyle}
+                    title="Copy position in Forsyth-Edwards Notation"
+                >
+                    FEN
+                </ResponsiveButton>
+                <ResponsiveButton
+                    onClick={() => exportData('uci')}
+                    className={secondaryButtonStyle}
+                    title="Export for chess engines (UCI format)"
+                >
+                    UCI
+                </ResponsiveButton>
+            </ResponsiveButtonGroup>
         </div>
     )
 }
