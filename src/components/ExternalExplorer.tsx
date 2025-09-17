@@ -9,7 +9,7 @@ interface ExternalExplorerProps {
     logAction: (action: string, details?: any) => void
 }
 
-// Reusable button component
+// Reusable button component with text overflow protection
 interface ResponsiveButtonProps {
     onClick: () => void
     className: string
@@ -20,7 +20,7 @@ interface ResponsiveButtonProps {
 const ResponsiveButton: React.FC<ResponsiveButtonProps> = ({ onClick, className, title, children }) => (
     <button
         onClick={onClick}
-        className={`px-3 py-1.5 sm:py-1.5 py-2 text-sm rounded-md font-medium transition-colors ${className}`}
+        className={`px-3 py-1.5 sm:py-1.5 py-2 text-sm rounded-md font-medium transition-colors min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${className}`}
         title={title}
     >
         {children}
@@ -43,19 +43,21 @@ const ResponsiveButtonGroup: React.FC<ResponsiveButtonGroupProps> = ({
         <span className="block text-sm text-gray-600 dark:text-gray-400 font-medium">
             {label}
         </span>
-        {/* Desktop - horizontal layout */}
-        <div className="hidden sm:flex items-center gap-2 flex-wrap">
+        {/* Desktop - horizontal layout with proper overflow handling */}
+        <div className="hidden sm:flex items-center gap-2 flex-wrap min-w-0">
             {children}
         </div>
-        {/* Mobile - configurable layout */}
-        <div className={`sm:hidden ${mobileLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-2'}`}>
-            {React.Children.map(children, (child) =>
-                React.isValidElement(child)
-                    ? React.cloneElement(child, {
-                        className: `${child.props.className} ${mobileLayout === 'stack' ? 'w-full' : ''}`
-                    })
-                    : child
-            )}
+        {/* Mobile - configurable layout with overflow protection */}
+        <div className={`sm:hidden min-w-0 ${mobileLayout === 'grid' ? 'grid grid-cols-2 gap-2' : 'flex flex-col gap-2'}`}>
+            {React.Children.map(children, (child) => {
+                if (React.isValidElement<ResponsiveButtonProps>(child)) {
+                    return React.cloneElement(child, {
+                        ...child.props,
+                        className: `${child.props.className} ${mobileLayout === 'stack' ? 'w-full' : 'min-w-0'}`
+                    } as ResponsiveButtonProps)
+                }
+                return child
+            })}
         </div>
     </div>
 )
@@ -250,7 +252,7 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
     const blueButtonStyle = "bg-blue-600 text-white hover:bg-blue-700"
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
             {/* External Explorers */}
             <ResponsiveButtonGroup label="Explore:" mobileLayout="stack">
                 <ResponsiveButton
