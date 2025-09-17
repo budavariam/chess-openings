@@ -1,15 +1,19 @@
-import React from 'react'
-import { ExternalExplorer } from './ExternalExplorer'
-import type { Opening } from '../types'
+import React from 'react';
+import { ExternalExplorer } from './ExternalExplorer';
+import { OpeningItem, getOpeningId } from './OpeningItem';
+import type { Opening, ChessMode } from '../types';
 
 interface GameStatusProps {
-  isPlayingOpening: boolean
-  matchedOpening: Opening | null
-  popularMovesIndex: number
-  moveHistory: string[]
-  openingsCount: number
-  onStudyOpening?: (opening: Opening) => void
-  logAction: (action: string, details?: any) => void
+  isPlayingOpening: boolean;
+  matchedOpening: Opening | null;
+  popularMovesIndex: number;
+  moveHistory: string[];
+  openingsCount: number;
+  onStudyOpening: (opening: Opening) => void;
+  toggleFavourite: (openingId: string) => void;
+  favouriteIds?: string[];
+  mode: ChessMode;
+  logAction: (action: string, details?: any) => void;
 }
 
 export function GameStatus({
@@ -19,17 +23,14 @@ export function GameStatus({
   moveHistory,
   openingsCount,
   onStudyOpening,
+  toggleFavourite,
+  favouriteIds = [],
+  mode = 'practice',
   logAction
 }: GameStatusProps) {
   const currentOpeningProgress = matchedOpening
     ? `${popularMovesIndex}/${matchedOpening.moves.length}`
-    : '0/0'
-
-  const handleStudyClick = () => {
-    if (matchedOpening && onStudyOpening) {
-      onStudyOpening(matchedOpening)
-    }
-  }
+    : '0/0';
 
   return (
     <>
@@ -48,44 +49,25 @@ export function GameStatus({
         </div>
       </div>
 
-      {/* Opening and Move History Grid */}
-      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mt-3 grid grid-cols-1 gap-4">
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-gray-900 dark:text-white">Matched Opening</h3>
-            {matchedOpening && !isPlayingOpening && onStudyOpening && (
-              <button
-                className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                onClick={handleStudyClick}
-                title="Study this opening"
-              >
-                📚 Study
-              </button>
-            )}
           </div>
+
           {matchedOpening ? (
-            <div className="space-y-2">
-              <div className="text-sm text-gray-400 flex gap-2 flex-wrap">
-                <span>{matchedOpening.eco}</span>
-                {matchedOpening.src && (
-                  <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
-                    {matchedOpening.src}
-                  </span>
-                )}
-                {matchedOpening.isEcoRoot && (
-                  <span className="text-xs bg-blue-200 dark:bg-blue-700 px-1 rounded">
-                    ROOT
-                  </span>
-                )}
-              </div>
-              <div className="font-semibold text-gray-900 dark:text-white">{matchedOpening.name}</div>
-              <div className="italic text-gray-900 dark:text-white text-sm break-words">
-                {matchedOpening.moves.join(" ")}
-              </div>
-              
-              {/* External Explorer Buttons */}
+            <div className="space-y-3">
+              <OpeningItem
+                opening={matchedOpening}
+                isFavourite={favouriteIds.includes(getOpeningId(matchedOpening))}
+                toggleFavourite={toggleFavourite}
+                onStudy={onStudyOpening}
+                variant="expanded"
+                mode={mode}
+                className="!p-3"
+              />
               <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
-                <ExternalExplorer 
+                <ExternalExplorer
                   matchedOpening={matchedOpening}
                   popularMovesIndex={popularMovesIndex}
                   logAction={logAction}
@@ -98,7 +80,7 @@ export function GameStatus({
         </div>
 
         <div>
-          <h3 className="font-medium text-gray-900 dark:text-white">Move History</h3>
+          <h3 className="font-medium text-gray-900 dark:text-white mb-2">Move History</h3>
           <div className="text-sm text-gray-400 break-words">
             {moveHistory.length > 0 ? moveHistory.join(' ') : '—'}
           </div>
@@ -108,5 +90,5 @@ export function GameStatus({
         </div>
       </div>
     </>
-  )
+  );
 }

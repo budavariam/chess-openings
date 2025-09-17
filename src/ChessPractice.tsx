@@ -17,6 +17,7 @@ import { SuggestedMoves } from './components/SuggestedMoves'
 import { PopularOpenings } from './components/PopularOpenings'
 import { FavouriteOpenings } from './components/FavouriteOpenings'
 import { calculatePopularity, parseMovesString } from './utils/chessUtils'
+import { getOpeningId } from './components/OpeningItem'
 
 interface ChessState {
   game: Chess
@@ -240,9 +241,9 @@ export default function ChessPractice() {
   // Get favorite openings
   const favouriteOpenings = useMemo(() => {
     return state.openings.filter(opening =>
-      state.favouriteIds.includes(opening.fen || opening.eco || opening.name)
-    ).sort((a, b) => b.popularity - a.popularity)
-  }, [state.openings, state.favouriteIds])
+      state.favouriteIds.includes(getOpeningId(opening))  // Consistent ID
+    ).sort((a, b) => b.popularity - a.popularity);
+  }, [state.openings, state.favouriteIds]);
 
   // Unified function to update game state
   const updateGameState = useCallback((game: Chess, safeIndex?: number) => {
@@ -711,6 +712,9 @@ export default function ChessPractice() {
             openingsCount={state.openings.length}
             onStudyOpening={startSearchResult}
             logAction={logAction}
+            toggleFavourite={toggleFavourite}
+            favouriteIds={state.favouriteIds}
+            mode={state.mode}
           />
         </div>
 
@@ -722,6 +726,7 @@ export default function ChessPractice() {
             startSearchResult={startSearchResult}
             toggleFavourite={toggleFavourite}
             favouriteIds={state.favouriteIds}
+            mode={state.mode}
           />
         )}
 
@@ -732,6 +737,7 @@ export default function ChessPractice() {
             startPopularAt={startPopularAt}
             toggleFavourite={toggleFavourite}
             favouriteIds={state.favouriteIds}
+            mode={state.mode}
           />
         )}
 
@@ -741,6 +747,7 @@ export default function ChessPractice() {
             startSearchResult={startSearchResult}
             toggleFavourite={toggleFavourite}
             favouriteIds={state.favouriteIds}
+            mode={state.mode}
           />
         )}
       </div>
