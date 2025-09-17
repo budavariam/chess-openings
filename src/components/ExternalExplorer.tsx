@@ -213,14 +213,14 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
                     </button>
                     <button
                         onClick={() => openInExplorer('lichess')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-400 text-black rounded-md font-medium cursor-pointer"
+                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
                         title="Copy moves for Lichess (opens analysis page)"
                     >
                         Lichess
                     </button>
                     <button
                         onClick={() => openInExplorer('365chess')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-400 text-black rounded-md font-medium cursor-pointer"
+                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
                         title="Copy moves for 365chess (opens main page)"
                     >
                         365chess
@@ -243,21 +243,21 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
                     </button>
                     <button
                         onClick={() => exportData('san')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-400 text-black rounded-md font-medium cursor-pointer"
+                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
                         title="Copy moves in Standard Algebraic Notation"
                     >
                         SAN
                     </button>
                     <button
                         onClick={() => exportData('fen')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-400 text-black rounded-md font-medium cursor-pointer"
+                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
                         title="Copy position in Forsyth-Edwards Notation"
                     >
                         FEN
                     </button>
                     <button
                         onClick={() => exportData('uci')}
-                        className="px-3 py-1.5 text-sm border border-gray-300 hover:bg-gray-400 text-black rounded-md font-medium cursor-pointer"
+                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-md font-medium cursor-pointer transition-colors"
                         title="Export for chess engines (UCI format)"
                     >
                         UCI
