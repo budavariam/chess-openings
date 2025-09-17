@@ -669,8 +669,6 @@ export default function ChessPractice() {
         game={state.game}
         boardTheme={state.boardTheme}
         showCoordinates={state.showCoordinates}
-        onThemeChange={handleThemeChange}
-        onCoordinatesToggle={handleCoordinatesToggle}
       >
         <OpeningControls
           isPlayingOpening={state.isPlayingOpening}
@@ -680,6 +678,10 @@ export default function ChessPractice() {
           gameHistoryLength={state.moveHistory.length}
           boardOrientation={state.boardOrientation}
           setBoardOrientation={handleBoardOrientationChange}
+          boardTheme={state.boardTheme}
+          showCoordinates={state.showCoordinates}
+          onThemeChange={handleThemeChange}
+          onCoordinatesToggle={handleCoordinatesToggle}
           logAction={logAction}
         />
       </ChessBoard>
