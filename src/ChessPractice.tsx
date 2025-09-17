@@ -33,6 +33,8 @@ interface ChessState {
   boardOrientation: BoardOrientation
   openingsLoaded: boolean
   favouriteIds: string[]
+  boardTheme: string
+  showCoordinates: boolean
 }
 
 type ChessAction =
@@ -46,6 +48,8 @@ type ChessAction =
   | { type: 'SET_SEARCH_RESULTS'; payload: Opening[] }
   | { type: 'SET_BOARD_ORIENTATION'; payload: BoardOrientation }
   | { type: 'SET_FAVOURITE_IDS'; payload: string[] }
+  | { type: 'SET_BOARD_THEME'; payload: string }
+  | { type: 'SET_SHOW_COORDINATES'; payload: boolean }
   | { type: 'RESET_GAME' }
   | { type: 'EXIT_OPENING_STUDY' }
 
@@ -81,6 +85,10 @@ function chessReducer(state: ChessState, action: ChessAction): ChessState {
       return { ...state, boardOrientation: action.payload }
     case 'SET_FAVOURITE_IDS':
       return { ...state, favouriteIds: action.payload }
+    case 'SET_BOARD_THEME':
+      return { ...state, boardTheme: action.payload }
+    case 'SET_SHOW_COORDINATES':
+      return { ...state, showCoordinates: action.payload }
     case 'RESET_GAME':
       return {
         ...state,
@@ -102,16 +110,25 @@ function chessReducer(state: ChessState, action: ChessAction): ChessState {
 }
 
 export default function ChessPractice() {
-  // Initialize with lazy loading of favorites from localStorage
+  // Initialize with lazy loading from localStorage
   const [state, dispatch] = useReducer(chessReducer, undefined, () => {
     let favouriteIds: string[] = []
+    let boardTheme = 'default'
+    let showCoordinates = true
+
     try {
       if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('chess-opening-favourites')
-        favouriteIds = saved ? JSON.parse(saved) : []
+        const savedFavourites = localStorage.getItem('chess-opening-favourites')
+        favouriteIds = savedFavourites ? JSON.parse(savedFavourites) : []
+
+        const savedTheme = localStorage.getItem('chess-board-theme')
+        boardTheme = savedTheme || 'default'
+
+        const savedCoords = localStorage.getItem('chess-show-coordinates')
+        showCoordinates = savedCoords !== 'false' // default to true
       }
     } catch (error) {
-      console.error('Failed to load favorites from localStorage:', error)
+      console.error('Failed to load preferences from localStorage:', error)
     }
 
     return {
@@ -128,7 +145,9 @@ export default function ChessPractice() {
       searchResults: [],
       boardOrientation: 'white' as BoardOrientation,
       openingsLoaded: false,
-      favouriteIds
+      favouriteIds,
+      boardTheme,
+      showCoordinates
     }
   })
 
@@ -145,6 +164,26 @@ export default function ChessPractice() {
       logAction('ERROR: Failed to save favorites to localStorage', error.message)
     }
   }, [state.favouriteIds, logAction])
+
+  // Save board theme to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('chess-board-theme', state.boardTheme)
+      logAction('Saved board theme to localStorage', { theme: state.boardTheme })
+    } catch (error: any) {
+      logAction('ERROR: Failed to save board theme to localStorage', error.message)
+    }
+  }, [state.boardTheme, logAction])
+
+  // Save coordinates preference to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('chess-show-coordinates', String(state.showCoordinates))
+      logAction('Saved coordinates preference to localStorage', { showCoordinates: state.showCoordinates })
+    } catch (error: any) {
+      logAction('ERROR: Failed to save coordinates preference to localStorage', error.message)
+    }
+  }, [state.showCoordinates, logAction])
 
   // Toggle favorite function
   const toggleFavourite = useCallback((openingId: string) => {
@@ -171,6 +210,32 @@ export default function ChessPractice() {
       toast.error(`Failed to toggle favorite: ${errorMessage}`)
     }
   }, [state.favouriteIds, logAction])
+
+  // Handle board theme change
+  const handleThemeChange = useCallback((theme: string) => {
+    try {
+      dispatch({ type: 'SET_BOARD_THEME', payload: theme })
+      logAction('Board theme changed', { theme })
+      toast.success(`Changed board theme to ${theme}`)
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error)
+      logAction('ERROR: Failed to change board theme', { theme, error: errorMessage })
+      toast.error(`Failed to change theme: ${errorMessage}`)
+    }
+  }, [logAction])
+
+  // Handle coordinates toggle
+  const handleCoordinatesToggle = useCallback((show: boolean) => {
+    try {
+      dispatch({ type: 'SET_SHOW_COORDINATES', payload: show })
+      logAction('Coordinates visibility changed', { show })
+      toast.success(`${show ? 'Enabled' : 'Disabled'} board coordinates`)
+    } catch (error: any) {
+      const errorMessage = error?.message || String(error)
+      logAction('ERROR: Failed to toggle coordinates', { show, error: errorMessage })
+      toast.error(`Failed to toggle coordinates: ${errorMessage}`)
+    }
+  }, [logAction])
 
   // Get favorite openings
   const favouriteOpenings = useMemo(() => {
@@ -602,16 +667,11 @@ export default function ChessPractice() {
         boardOrientation={state.boardOrientation}
         onPieceDrop={onPieceDrop}
         game={state.game}
-        // position={state.game.fen()}
-        // boardOrientation={state.boardOrientation}
-        // onPieceDrop={onPieceDrop}
-        // game={state.game}
-        // boardTheme={state.boardTheme}
-        // showCoordinates={state.showCoordinates}
-        // onThemeChange={handleThemeChange}
-        // onCoordinatesToggle={handleCoordinatesToggle}
+        boardTheme={state.boardTheme}
+        showCoordinates={state.showCoordinates}
+        onThemeChange={handleThemeChange}
+        onCoordinatesToggle={handleCoordinatesToggle}
       >
-
         <OpeningControls
           isPlayingOpening={state.isPlayingOpening}
           matchedOpening={state.matchedOpening}
