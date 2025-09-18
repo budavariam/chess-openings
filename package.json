@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build --base=/chess-openings/",
     "preview": "vite preview --base=/chess-openings/",
-    "format": "prettier --write \"./src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
+    "format": "prettier --ignore-path ./.prettierignore --write \"./src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
   },
   "dependencies": {
     "chess-tools": "^0.3.0",
