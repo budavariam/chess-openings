@@ -1,7 +1,7 @@
-import React from 'react';
-import { ExternalExplorer } from './ExternalExplorer';
-import { OpeningItem, getOpeningId } from './OpeningItem';
-import type { Opening, ChessMode } from '../types';
+import React from "react";
+import { ExternalExplorer } from "./ExternalExplorer";
+import { OpeningItem, getOpeningId } from "./OpeningItem";
+import type { Opening, ChessMode } from "../types";
 
 interface GameStatusProps {
   isPlayingOpening: boolean;
@@ -25,12 +25,12 @@ export function GameStatus({
   onStudyOpening,
   toggleFavourite,
   favouriteIds = [],
-  mode = 'practice',
-  logAction
+  mode = "practice",
+  logAction,
 }: GameStatusProps) {
   const currentOpeningProgress = matchedOpening
     ? `${popularMovesIndex}/${matchedOpening.moves.length}`
-    : '0/0';
+    : "0/0";
 
   return (
     <>
@@ -39,7 +39,8 @@ export function GameStatus({
         <div className="text-sm font-medium">
           {isPlayingOpening ? (
             <span className="text-green-600 dark:text-green-400">
-              📖 Playing Opening: {matchedOpening?.name} ({currentOpeningProgress})
+              📖 Playing Opening: {matchedOpening?.name} (
+              {currentOpeningProgress})
             </span>
           ) : (
             <span className="text-blue-600 dark:text-blue-400">
@@ -52,14 +53,18 @@ export function GameStatus({
       <div className="mt-3 grid grid-cols-1 gap-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-gray-900 dark:text-white">Matched Opening</h3>
+            <h3 className="font-medium text-gray-900 dark:text-white">
+              Matched Opening
+            </h3>
           </div>
 
           {matchedOpening ? (
             <div className="space-y-3">
               <OpeningItem
                 opening={matchedOpening}
-                isFavourite={favouriteIds.includes(getOpeningId(matchedOpening))}
+                isFavourite={favouriteIds.includes(
+                  getOpeningId(matchedOpening),
+                )}
                 toggleFavourite={toggleFavourite}
                 onStudy={onStudyOpening}
                 variant="expanded"
@@ -80,9 +85,11 @@ export function GameStatus({
         </div>
 
         <div>
-          <h3 className="font-medium text-gray-900 dark:text-white mb-2">Move History</h3>
+          <h3 className="font-medium text-gray-900 dark:text-white mb-2">
+            Move History
+          </h3>
           <div className="text-sm text-gray-400 break-words">
-            {moveHistory.length > 0 ? moveHistory.join(' ') : '—'}
+            {moveHistory.length > 0 ? moveHistory.join(" ") : "—"}
           </div>
           <div className="text-xs text-gray-500 mt-1">
             {openingsCount} openings loaded

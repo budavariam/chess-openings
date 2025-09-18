@@ -1,6 +1,6 @@
-import React from 'react';
-import type { Opening, ChessMode } from '../types';
-import { OpeningItem, getOpeningId } from './OpeningItem';
+import React from "react";
+import type { Opening, ChessMode } from "../types";
+import { OpeningItem, getOpeningId } from "./OpeningItem";
 
 interface SearchOpeningsProps {
   searchQuery: string;
@@ -19,11 +19,13 @@ export function SearchOpenings({
   startSearchResult,
   toggleFavourite,
   favouriteIds,
-  mode = 'search'
+  mode = "search",
 }: SearchOpeningsProps) {
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
-      <h3 className="font-medium mb-3 text-gray-900 dark:text-white">Search Openings</h3>
+      <h3 className="font-medium mb-3 text-gray-900 dark:text-white">
+        Search Openings
+      </h3>
 
       <input
         type="text"

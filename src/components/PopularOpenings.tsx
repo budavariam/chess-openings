@@ -1,6 +1,6 @@
-import React from 'react';
-import type { Opening, ChessMode } from '../types';
-import { OpeningItem, getOpeningId } from './OpeningItem';
+import React from "react";
+import type { Opening, ChessMode } from "../types";
+import { OpeningItem, getOpeningId } from "./OpeningItem";
 
 interface PopularOpeningsProps {
   moveHistory: string[];
@@ -17,12 +17,12 @@ export const PopularOpenings: React.FC<PopularOpeningsProps> = ({
   startPopularAt,
   toggleFavourite,
   favouriteIds,
-  mode = 'popular'
+  mode = "popular",
 }) => {
   // Wrapper function to convert index-based callback to opening-based
   const handleStudyOpening = (opening: Opening) => {
-    const index = popularSorted.findIndex(o => 
-      getOpeningId(o) === getOpeningId(opening)
+    const index = popularSorted.findIndex(
+      (o) => getOpeningId(o) === getOpeningId(opening),
     );
     if (index !== -1) {
       startPopularAt(index);

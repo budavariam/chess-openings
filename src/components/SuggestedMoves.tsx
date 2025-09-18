@@ -1,14 +1,16 @@
-import React from 'react'
+import React from "react";
 
 interface SuggestedMovesProps {
-  suggestions: string[]
-  makeMove: (move: string) => boolean
+  suggestions: string[];
+  makeMove: (move: string) => boolean;
 }
 
 export function SuggestedMoves({ suggestions, makeMove }: SuggestedMovesProps) {
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
-      <h3 className="font-medium mb-2 text-gray-900 dark:text-white">Suggested Next Moves</h3>
+      <h3 className="font-medium mb-2 text-gray-900 dark:text-white">
+        Suggested Next Moves
+      </h3>
       {suggestions.length > 0 ? (
         <div className="flex gap-2 flex-wrap">
           {suggestions.map((move, i) => (
@@ -26,5 +28,5 @@ export function SuggestedMoves({ suggestions, makeMove }: SuggestedMovesProps) {
         <div className="text-gray-500">No suggestions available</div>
       )}
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-import React from 'react';
-import type { Opening, ChessMode } from '../types';
-import { OpeningItem, getOpeningId } from './OpeningItem';
+import React from "react";
+import type { Opening, ChessMode } from "../types";
+import { OpeningItem, getOpeningId } from "./OpeningItem";
 
 interface FavouriteOpeningsProps {
   favouriteOpenings: Opening[];
@@ -15,7 +15,7 @@ export const FavouriteOpenings: React.FC<FavouriteOpeningsProps> = ({
   startSearchResult,
   toggleFavourite,
   favouriteIds,
-  mode = 'favourites'
+  mode = "favourites",
 }) => {
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
@@ -25,7 +25,8 @@ export const FavouriteOpenings: React.FC<FavouriteOpeningsProps> = ({
 
       {favouriteOpenings.length === 0 ? (
         <p className="text-gray-500 dark:text-gray-400 text-sm italic">
-          No favourite openings yet. Mark openings as favourites to see them here.
+          No favourite openings yet. Mark openings as favourites to see them
+          here.
         </p>
       ) : (
         <div className="space-y-2">

@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
-import type { ChessMode } from '../types'
+import React, { useState } from "react";
+import type { ChessMode } from "../types";
 
 interface ModeSelectorProps {
-  mode: ChessMode
-  setMode: (mode: ChessMode) => void
-  setIsPlayingOpening: (isPlaying: boolean) => void
-  resetGame: () => void
-  logAction: (action: string, details?: any) => void
+  mode: ChessMode;
+  setMode: (mode: ChessMode) => void;
+  setIsPlayingOpening: (isPlaying: boolean) => void;
+  resetGame: () => void;
+  logAction: (action: string, details?: any) => void;
 }
 
 export const ModeSelector: React.FC<ModeSelectorProps> = ({
@@ -14,26 +14,26 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   setMode,
   setIsPlayingOpening,
   resetGame,
-  logAction
+  logAction,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleModeChange = (newMode: ChessMode) => {
-    logAction('Mode changed', { from: mode, to: newMode })
-    setMode(newMode)
-    setIsPlayingOpening(false)
-    resetGame()
-    setIsExpanded(false)
-  }
+    logAction("Mode changed", { from: mode, to: newMode });
+    setMode(newMode);
+    setIsPlayingOpening(false);
+    resetGame();
+    setIsExpanded(false);
+  };
 
   const modes: { key: ChessMode; label: string; icon: string }[] = [
-    { key: 'practice', label: 'Practice', icon: '♟️' },
-    { key: 'search', label: 'Search', icon: '🔍' },
-    { key: 'popular', label: 'Popular', icon: '⭐' },
-    { key: 'favourites', label: 'Favourites', icon: '❤️' }
-  ]
+    { key: "practice", label: "Practice", icon: "♟️" },
+    { key: "search", label: "Search", icon: "🔍" },
+    { key: "popular", label: "Popular", icon: "⭐" },
+    { key: "favourites", label: "Favourites", icon: "❤️" },
+  ];
 
-  const currentMode = modes.find(m => m.key === mode) || modes[0]
+  const currentMode = modes.find((m) => m.key === mode) || modes[0];
 
   return (
     <>
@@ -43,10 +43,11 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
           <button
             key={key}
             onClick={() => handleModeChange(key)}
-            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${mode === key
-              ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+              mode === key
+                ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            }`}
           >
             <span>{icon}</span>
             <span className="whitespace-nowrap">{label}</span>
@@ -65,12 +66,17 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             <span>{currentMode.label}</span>
           </div>
           <svg
-            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
@@ -85,15 +91,18 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
                 <button
                   key={key}
                   onClick={() => handleModeChange(key)}
-                  className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors flex items-center gap-2 ${mode === key
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
+                  className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors flex items-center gap-2 ${
+                    mode === key
+                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
                 >
                   <span>{icon}</span>
                   <span>{label}</span>
                   {mode === key && (
-                    <span className="ml-auto text-blue-600 dark:text-blue-400 text-xs">✓</span>
+                    <span className="ml-auto text-blue-600 dark:text-blue-400 text-xs">
+                      ✓
+                    </span>
                   )}
                 </button>
               ))}
@@ -102,5 +111,5 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         )}
       </div>
     </>
-  )
-}
+  );
+};

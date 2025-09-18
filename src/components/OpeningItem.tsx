@@ -1,19 +1,19 @@
-import React from 'react';
-import type { Opening, ChessMode } from '../types';
+import React from "react";
+import type { Opening, ChessMode } from "../types";
 
 interface OpeningItemProps {
   opening: Opening;
   isFavourite: boolean;
   toggleFavourite: (openingId: string) => void;
   onStudy?: (opening: Opening, resumeAtLastPosition?: boolean) => void;
-  variant?: 'list' | 'expanded';
+  variant?: "list" | "expanded";
   mode?: ChessMode;
   showIndex?: number;
   className?: string;
 }
 
 // STANDARDIZED ID FUNCTION - use this everywhere!
-export const getOpeningId = (opening: Opening): string => 
+export const getOpeningId = (opening: Opening): string =>
   opening.fen || opening.eco || opening.name;
 
 export function OpeningItem({
@@ -21,13 +21,14 @@ export function OpeningItem({
   isFavourite,
   toggleFavourite,
   onStudy,
-  variant = 'list',
-  mode = 'practice',
+  variant = "list",
+  mode = "practice",
   showIndex,
-  className = ''
+  className = "",
 }: OpeningItemProps) {
   const openingId = getOpeningId(opening);
-  const shouldShowStudyButton = variant === 'list' || mode === 'practice' || mode === 'favourites';
+  const shouldShowStudyButton =
+    variant === "list" || mode === "practice" || mode === "favourites";
 
   // Heart icon for favorite button
   const HeartIcon = () => (
@@ -36,9 +37,11 @@ export function OpeningItem({
     </svg>
   );
 
-  if (variant === 'expanded') {
+  if (variant === "expanded") {
     return (
-      <div className={`p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm ${className}`}>
+      <div
+        className={`p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm ${className}`}
+      >
         {/* Header with name */}
         <div className="flex items-start gap-3 mb-3">
           {showIndex !== undefined && (
@@ -82,10 +85,10 @@ export function OpeningItem({
             }}
             className={`p-2 rounded-lg transition-colors ${
               isFavourite
-                ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
             }`}
-            title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+            title={isFavourite ? "Remove from favourites" : "Add to favourites"}
           >
             <HeartIcon />
           </button>
@@ -111,9 +114,12 @@ export function OpeningItem({
 
         {/* Move sequence */}
         <div className="text-sm text-gray-600 dark:text-gray-400 font-mono leading-relaxed">
-          {opening.moves.slice(0, 8).join(' ')}
+          {opening.moves.slice(0, 8).join(" ")}
           {opening.moves.length > 8 && (
-            <span className="text-gray-400"> ... +{opening.moves.length - 8} more</span>
+            <span className="text-gray-400">
+              {" "}
+              ... +{opening.moves.length - 8} more
+            </span>
           )}
         </div>
 
@@ -127,7 +133,9 @@ export function OpeningItem({
 
   // List variant (compact) - improved mobile layout
   return (
-    <div className={`p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow ${className}`}>
+    <div
+      className={`p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow ${className}`}
+    >
       {/* Title and Index - always full width on mobile */}
       <div className="flex items-start gap-2 mb-2">
         {showIndex !== undefined && (
@@ -165,12 +173,10 @@ export function OpeningItem({
       {/* Moves display */}
       <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
         <span className="font-mono">
-          {opening.moves.slice(0, 6).join(' ')}
-          {opening.moves.length > 6 && ' ...'}
+          {opening.moves.slice(0, 6).join(" ")}
+          {opening.moves.length > 6 && " ..."}
         </span>
-        <span className="ml-2 text-xs">
-          {opening.moves.length} moves
-        </span>
+        <span className="ml-2 text-xs">{opening.moves.length} moves</span>
       </div>
 
       {/* Action buttons - responsive container like ExternalExplorer */}
@@ -182,10 +188,10 @@ export function OpeningItem({
           }}
           className={`p-2 rounded-lg transition-colors ${
             isFavourite
-              ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-              : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              ? "text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+              : "text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
           }`}
-          title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+          title={isFavourite ? "Remove from favourites" : "Add to favourites"}
         >
           <HeartIcon />
         </button>
