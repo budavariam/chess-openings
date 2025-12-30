@@ -16,6 +16,8 @@ interface OpeningControlsProps {
   showCoordinates?: boolean;
   onThemeChange?: (theme: string) => void;
   onCoordinatesToggle?: (show: boolean) => void;
+  clickToMoveMode?: boolean;
+  onClickToMoveToggle?: (enabled: boolean) => void;
   logAction: (action: string, details?: any) => void;
 }
 
@@ -33,6 +35,8 @@ export function OpeningControls({
   showCoordinates = true,
   onThemeChange,
   onCoordinatesToggle,
+  clickToMoveMode = false,
+  onClickToMoveToggle,
   logAction,
 }: OpeningControlsProps) {
   const [showStyleSelector, setShowStyleSelector] = useState(false);
@@ -136,6 +140,7 @@ export function OpeningControls({
       action: "start" as NavigationAction,
       disabled: popularMovesIndex === 0,
       title: "Go to start",
+      primary: false,
     },
     {
       id: "back",
@@ -143,6 +148,7 @@ export function OpeningControls({
       action: "back" as NavigationAction,
       disabled: popularMovesIndex === 0,
       title: "Previous move",
+      primary: false,
     },
     {
       id: "forward",
@@ -160,6 +166,7 @@ export function OpeningControls({
       action: "end" as NavigationAction,
       disabled: false,
       title: "Go to end",
+      primary: false,
     },
   ] as const;
 
@@ -279,6 +286,21 @@ export function OpeningControls({
                 {showCoordinates ? "✓" : "○"}
               </span>
             </button>
+
+            <button
+              onClick={() => {
+                onClickToMoveToggle?.(!clickToMoveMode);
+                setShowStyleSelector(false);
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+            >
+              <span>Click to Move</span>
+              <span
+                className={`text-xs ${clickToMoveMode ? "text-green-600" : "text-gray-400"}`}
+              >
+                {clickToMoveMode ? "✓" : "○"}
+              </span>
+            </button>
           </div>
         </>
       )}
@@ -288,6 +310,7 @@ export function OpeningControls({
   const hideControls = !isPlayingOpening || !matchedOpening;
   const currentMoves = matchedOpening?.moves || [];
   const hasNextMove = popularMovesIndex < currentMoves.length;
+  const canNavigate = isPlayingOpening || gameHistoryLength > 0;
 
   return (
     <div className="mt-4 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -301,7 +324,7 @@ export function OpeningControls({
                 : "bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
             onClick={() => handleNavigation(button.action)}
-            disabled={button.disabled || hideControls}
+            disabled={button.disabled || !canNavigate}
             title={button.title}
           >
             {button.id === "forward" && hasNextMove

@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Chessboard,
   ChessboardOptions,
   PieceDropHandlerArgs,
+  SquareHandlerArgs,
 } from "react-chessboard";
 import { getLastMove } from "../utils/chessUtils";
 import type { BoardOrientation } from "../types";
@@ -78,23 +79,34 @@ interface ChessBoardProps {
   position: string;
   boardOrientation: BoardOrientation;
   onPieceDrop: (args: PieceDropHandlerArgs) => boolean;
+  onSquareClick?: (square: string) => void;
   game: any;
   children: React.ReactNode;
   showCoordinates?: boolean;
   boardTheme?: string;
+  clickToMoveMode?: boolean;
+  selectedSquare?: string | null;
+  possibleMoves?: string[];
+  piecesWithMoves?: string[];
 }
 
 export function ChessBoard({
   position,
   boardOrientation,
   onPieceDrop,
+  onSquareClick,
   game,
   children,
   showCoordinates = true,
   boardTheme = "default",
+  clickToMoveMode = false,
+  selectedSquare = null,
+  possibleMoves = [],
+  piecesWithMoves = [],
 }: ChessBoardProps) {
   const lastMove = getLastMove(game);
   const currentTheme = boardThemes[boardTheme] || boardThemes.default;
+  const [showHelp, setShowHelp] = useState(false);
 
   console.log(
     "ChessBoard render - boardTheme:",
@@ -111,8 +123,43 @@ export function ChessBoard({
       styles[lastMove.to] = currentTheme.lastMoveHighlight.to;
     }
 
+    // Highlight selected square
+    if (selectedSquare) {
+      styles[selectedSquare] = {
+        backgroundColor: "rgba(255, 255, 0, 0.5)",
+      };
+    }
+
+    // Highlight pieces with possible opening moves
+    if (clickToMoveMode) {
+      piecesWithMoves.forEach((square) => {
+        if (square !== selectedSquare) {
+          styles[square] = {
+            backgroundColor: "rgba(155, 199, 0, 0.3)",
+            border: "2px solid rgba(155, 199, 0, 0.6)",
+          };
+        }
+      });
+    }
+
+    // Show circles for possible moves
+    possibleMoves.forEach((square) => {
+      styles[square] = {
+        background:
+          "radial-gradient(circle, rgba(0,0,0,.1) 25%, transparent 25%)",
+        borderRadius: "50%",
+      };
+    });
+
     return styles;
-  }, [lastMove, currentTheme]);
+  }, [
+    lastMove,
+    currentTheme,
+    selectedSquare,
+    possibleMoves,
+    piecesWithMoves,
+    clickToMoveMode,
+  ]);
 
   const chessboardKey = useMemo(
     () => `chessboard-${boardTheme}-${position}`,
@@ -120,10 +167,15 @@ export function ChessBoard({
   );
 
   const chessboardOptions = useMemo(() => {
+    const handleSquareClick = onSquareClick
+      ? (args: SquareHandlerArgs) => onSquareClick(args.square)
+      : undefined;
+
     const opts: ChessboardOptions = {
       boardOrientation: boardOrientation,
       position: position,
-      onPieceDrop: onPieceDrop,
+      onPieceDrop: clickToMoveMode ? () => false : onPieceDrop,
+      onSquareClick: handleSquareClick,
       squareStyles: customSquareStyles,
       lightSquareStyle: currentTheme.lightSquareStyle,
       darkSquareStyle: currentTheme.darkSquareStyle,
@@ -149,15 +201,40 @@ export function ChessBoard({
     boardOrientation,
     position,
     onPieceDrop,
+    onSquareClick,
     customSquareStyles,
     currentTheme.lightSquareStyle,
     currentTheme.darkSquareStyle,
     showCoordinates,
+    clickToMoveMode,
   ]);
 
   return (
     <div className="flex justify-center lg:justify-start">
       <div className="relative shadow-xl rounded-2xl overflow-auto bg-white dark:bg-gray-800 p-3">
+        {clickToMoveMode && (
+          <div className="mb-2">
+            <div className="px-3 py-2 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-600 rounded-lg text-sm text-green-800 dark:text-green-300 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">👆</span>
+                <span className="font-medium">Click to Move Mode</span>
+              </div>
+              <button
+                onClick={() => setShowHelp(!showHelp)}
+                className="flex items-center justify-center w-5 h-5 rounded-full bg-green-200 dark:bg-green-800 hover:bg-green-300 dark:hover:bg-green-700 transition-colors"
+                aria-label="Toggle help"
+              >
+                <span className="text-xs font-bold">?</span>
+              </button>
+            </div>
+            {showHelp && (
+              <div className="mt-1 px-3 py-2 bg-green-50 dark:bg-green-950/50 border border-green-300 dark:border-green-700 rounded-lg text-xs text-green-700 dark:text-green-400">
+                Click highlighted pieces to select, then click a marked square
+                to move
+              </div>
+            )}
+          </div>
+        )}
         <Chessboard key={chessboardKey} options={chessboardOptions} />
         {children}
       </div>

@@ -1,5 +1,5 @@
 import React, { useReducer, useMemo, useCallback, useEffect } from "react";
-import { Chess } from "chess.js";
+import { Chess, Square, Move } from "chess.js";
 import { PieceDropHandlerArgs } from "react-chessboard";
 import { toast } from "react-toastify";
 import ecoA from "./eco.json/ecoA.json";
@@ -36,6 +36,8 @@ interface ChessState {
   favouriteIds: string[];
   boardTheme: string;
   showCoordinates: boolean;
+  clickToMoveMode: boolean;
+  selectedSquare: string | null;
 }
 
 type ChessAction =
@@ -61,6 +63,8 @@ type ChessAction =
   | { type: "SET_FAVOURITE_IDS"; payload: string[] }
   | { type: "SET_BOARD_THEME"; payload: string }
   | { type: "SET_SHOW_COORDINATES"; payload: boolean }
+  | { type: "SET_CLICK_TO_MOVE_MODE"; payload: boolean }
+  | { type: "SET_SELECTED_SQUARE"; payload: string | null }
   | { type: "RESET_GAME" }
   | { type: "EXIT_OPENING_STUDY" };
 
@@ -100,6 +104,14 @@ function chessReducer(state: ChessState, action: ChessAction): ChessState {
       return { ...state, boardTheme: action.payload };
     case "SET_SHOW_COORDINATES":
       return { ...state, showCoordinates: action.payload };
+    case "SET_CLICK_TO_MOVE_MODE":
+      return {
+        ...state,
+        clickToMoveMode: action.payload,
+        selectedSquare: null,
+      };
+    case "SET_SELECTED_SQUARE":
+      return { ...state, selectedSquare: action.payload };
     case "RESET_GAME":
       return {
         ...state,
@@ -108,6 +120,7 @@ function chessReducer(state: ChessState, action: ChessAction): ChessState {
         matchedOpening: null,
         popularMovesIndex: 0,
         isPlayingOpening: false,
+        selectedSquare: null,
       };
     case "EXIT_OPENING_STUDY":
       return {
@@ -161,6 +174,8 @@ export default function ChessPractice() {
       favouriteIds,
       boardTheme,
       showCoordinates,
+      clickToMoveMode: false,
+      selectedSquare: null,
     };
   });
 
@@ -284,6 +299,25 @@ export default function ChessPractice() {
           error: errorMessage,
         });
         toast.error(`Failed to toggle coordinates: ${errorMessage}`);
+      }
+    },
+    [logAction],
+  );
+
+  // Handle click-to-move mode toggle
+  const handleClickToMoveToggle = useCallback(
+    (enabled: boolean) => {
+      try {
+        dispatch({ type: "SET_CLICK_TO_MOVE_MODE", payload: enabled });
+        logAction("Click-to-move mode changed", { enabled });
+        toast.success(`${enabled ? "Enabled" : "Disabled"} click-to-move mode`);
+      } catch (error: any) {
+        const errorMessage = error?.message || String(error);
+        logAction("ERROR: Failed to toggle click-to-move mode", {
+          enabled,
+          error: errorMessage,
+        });
+        toast.error(`Failed to toggle click-to-move mode: ${errorMessage}`);
       }
     },
     [logAction],
@@ -587,6 +621,134 @@ export default function ChessPractice() {
     return movesWithPopularity.slice(0, 8).map((item) => item.move);
   }, [state.moveHistory, state.openings, logAction]);
 
+  // Calculate possible moves for selected piece in click-to-move mode
+  const possibleMoves = useMemo(() => {
+    if (
+      !state.clickToMoveMode ||
+      !state.selectedSquare ||
+      state.mode !== "practice"
+    )
+      return [];
+
+    const moves = state.game.moves({
+      square: state.selectedSquare as Square,
+      verbose: true,
+    }) as Move[];
+
+    // Filter moves to only those that are in suggestions
+    const suggestedMoveTargets = moves
+      .filter((move) => suggestions.includes(move.san))
+      .map((move) => move.to);
+
+    logAction("Possible moves calculated", {
+      selectedSquare: state.selectedSquare,
+      totalMoves: moves.length,
+      suggestedMoves: suggestedMoveTargets.length,
+    });
+
+    return suggestedMoveTargets;
+  }, [
+    state.clickToMoveMode,
+    state.selectedSquare,
+    state.game,
+    state.mode,
+    suggestions,
+    logAction,
+  ]);
+
+  // Calculate which pieces have possible opening moves
+  const piecesWithMoves = useMemo(() => {
+    if (!state.clickToMoveMode || state.mode !== "practice") return [];
+
+    const squares: string[] = [];
+    const allMoves = state.game.moves({ verbose: true }) as Move[];
+
+    // Get unique from squares that have moves in suggestions
+    allMoves.forEach((move) => {
+      if (suggestions.includes(move.san) && !squares.includes(move.from)) {
+        squares.push(move.from);
+      }
+    });
+
+    logAction("Pieces with opening moves calculated", {
+      count: squares.length,
+      squares,
+    });
+
+    return squares;
+  }, [state.clickToMoveMode, state.game, state.mode, suggestions, logAction]);
+
+  // Handle square click in click-to-move mode
+  const onSquareClick = useCallback(
+    (square: string) => {
+      if (!state.clickToMoveMode || state.mode !== "practice") return;
+
+      try {
+        const piece = state.game.get(square as Square);
+
+        // If a piece is selected and we click a possible move square
+        if (state.selectedSquare && possibleMoves.includes(square as Square)) {
+          const g = new Chess(state.game.fen());
+          const move = g.move({
+            from: state.selectedSquare as Square,
+            to: square as Square,
+            promotion: "q",
+          });
+
+          if (move) {
+            logAction("Click-to-move successful", {
+              from: state.selectedSquare,
+              to: square,
+              move: move.san,
+            });
+            updateGameState(g);
+            dispatch({ type: "SET_SELECTED_SQUARE", payload: null });
+
+            if (state.isPlayingOpening) {
+              logAction("Manual move during opening playback - resetting");
+              dispatch({ type: "EXIT_OPENING_STUDY" });
+              toast.info("Exited opening study mode");
+            }
+          } else {
+            toast.error("Invalid move!");
+          }
+        }
+        // If we click on a piece, select it
+        else if (piece) {
+          const isOurTurn =
+            (state.game.turn() === "w" && piece.color === "w") ||
+            (state.game.turn() === "b" && piece.color === "b");
+
+          if (isOurTurn) {
+            logAction("Piece selected", { square, piece: piece.type });
+            dispatch({ type: "SET_SELECTED_SQUARE", payload: square });
+          }
+        }
+        // If we click an empty square with a piece selected, deselect
+        else if (state.selectedSquare) {
+          dispatch({ type: "SET_SELECTED_SQUARE", payload: null });
+        }
+      } catch (error: any) {
+        const errorMessage = error?.message || String(error);
+        logAction("ERROR: Square click failed", {
+          square,
+          error: errorMessage,
+        });
+        toast.error(`Move failed: ${errorMessage}`);
+      }
+    },
+    [
+      state.clickToMoveMode,
+      state.selectedSquare,
+      state.game,
+      state.isPlayingOpening,
+      state.mode,
+      possibleMoves,
+      logAction,
+      updateGameState,
+    ],
+  );
+
   const popularSorted = useMemo(() => {
     let filteredOpenings = state.openings;
     if (state.moveHistory.length > 0) {
@@ -705,11 +867,55 @@ export default function ChessPractice() {
   const navigateToMove = useCallback(
     (targetIndex: number) => {
       try {
+        // In practice mode (not playing an opening), use move history for navigation
+        if (!state.isPlayingOpening && state.moveHistory.length > 0) {
+          const safeIndex = Math.max(
+            0,
+            Math.min(targetIndex, state.moveHistory.length),
+          );
+
+          logAction("Navigating in practice mode", {
+            targetIndex,
+            safeIndex,
+            moveHistoryLength: state.moveHistory.length,
+            currentIndex: state.popularMovesIndex,
+          });
+
+          const g = new Chess();
+          for (let i = 0; i < safeIndex; i++) {
+            if (i < state.moveHistory.length) {
+              const move = g.move(state.moveHistory[i]);
+              if (!move) {
+                logAction(
+                  "ERROR: Failed to apply move during practice navigation",
+                  {
+                    moveIndex: i,
+                    move: state.moveHistory[i],
+                  },
+                );
+                break;
+              }
+            }
+          }
+
+          updateGameState(g, safeIndex);
+
+          if (safeIndex === 0) {
+            toast.info("Moved to start position");
+          } else {
+            toast.info(`Moved to ${state.moveHistory[safeIndex - 1]}`);
+          }
+          return;
+        }
+
         const chosen =
           state.matchedOpening || popularSorted[state.popularIndex];
+
         if (!chosen) {
-          logAction("Cannot navigate - no opening selected");
-          toast.error("No opening selected");
+          logAction(
+            "Cannot navigate - no opening selected and no move history",
+          );
+          toast.error("No moves to navigate");
           return;
         }
 
@@ -755,6 +961,8 @@ export default function ChessPractice() {
     },
     [
       state.matchedOpening,
+      state.moveHistory,
+      state.isPlayingOpening,
       popularSorted,
       state.popularIndex,
       state.popularMovesIndex,
@@ -801,9 +1009,14 @@ export default function ChessPractice() {
         position={state.game.fen()}
         boardOrientation={state.boardOrientation}
         onPieceDrop={onPieceDrop}
+        onSquareClick={onSquareClick}
         game={state.game}
         boardTheme={state.boardTheme}
         showCoordinates={state.showCoordinates}
+        clickToMoveMode={state.clickToMoveMode && state.mode === "practice"}
+        selectedSquare={state.selectedSquare}
+        possibleMoves={possibleMoves}
+        piecesWithMoves={piecesWithMoves}
       >
         <OpeningControls
           isPlayingOpening={state.isPlayingOpening}
@@ -817,6 +1030,8 @@ export default function ChessPractice() {
           showCoordinates={state.showCoordinates}
           onThemeChange={handleThemeChange}
           onCoordinatesToggle={handleCoordinatesToggle}
+          clickToMoveMode={state.clickToMoveMode}
+          onClickToMoveToggle={handleClickToMoveToggle}
           logAction={logAction}
         />
       </ChessBoard>
