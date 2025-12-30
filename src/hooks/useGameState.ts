@@ -143,6 +143,14 @@ export function useGameState() {
 
   const navigateToMove = useCallback(
     (targetIndex: number, popularSorted: Opening[]) => {
+      console.log("[navigateToMove] Called:", {
+        targetIndex,
+        isPlayingOpening: state.isPlayingOpening,
+        currentPopularMovesIndex: state.popularMovesIndex,
+        moveHistoryLength: state.moveHistory.length,
+        matchedOpening: state.matchedOpening?.name,
+      });
+
       try {
         // If playing an opening, navigate through opening moves
         if (state.isPlayingOpening) {

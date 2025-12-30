@@ -113,20 +113,32 @@ export function OpeningControls({
     const maxMoves = matchedOpening?.moves?.length || 0;
     const maxIndex = Math.max(maxMoves, gameHistoryLength);
 
+    let targetIndex: number;
     switch (action) {
       case "start":
-        onNavigate(0);
+        targetIndex = 0;
         break;
       case "back":
-        onNavigate(Math.max(0, popularMovesIndex - 1));
+        targetIndex = Math.max(0, popularMovesIndex - 1);
         break;
       case "forward":
-        onNavigate(Math.min(maxIndex, popularMovesIndex + 1));
+        targetIndex = Math.min(maxIndex, popularMovesIndex + 1);
         break;
       case "end":
-        onNavigate(maxIndex);
+        targetIndex = maxIndex;
         break;
     }
+
+    console.log("[OpeningControls] Navigation:", {
+      action,
+      currentIndex: popularMovesIndex,
+      targetIndex,
+      maxMoves,
+      gameHistoryLength,
+      maxIndex,
+    });
+
+    onNavigate(targetIndex);
   };
 
   const navigationButtons = [
