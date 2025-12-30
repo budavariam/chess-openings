@@ -77,6 +77,26 @@ export default function ChessPractice() {
 
   const suggestions = useSuggestions(gameState.moveHistory, openings);
 
+  const explorePiecesWithMoves = useMemo(() => {
+    if (gameState.mode !== "explore") return [];
+
+    const key = gameState.moveHistory.join("|");
+    const availableMoves = openingMovesIndex.get(key);
+    if (!availableMoves) return [];
+
+    const allOpeningMoves = Array.from(availableMoves);
+    const squares: string[] = [];
+    const allMoves = gameState.game.moves({ verbose: true });
+
+    allMoves.forEach((move: any) => {
+      if (allOpeningMoves.includes(move.san) && !squares.includes(move.from)) {
+        squares.push(move.from);
+      }
+    });
+
+    return squares;
+  }, [gameState.mode, gameState.moveHistory, gameState.game, openingMovesIndex]);
+
   const onPieceDrop = useCallback(
     (args: PieceDropHandlerArgs): boolean => {
       const { sourceSquare, targetSquare } = args;
@@ -258,7 +278,11 @@ export default function ChessPractice() {
         clickToMoveMode={clickToMove.enabled && gameState.mode === "practice"}
         selectedSquare={clickToMove.selectedSquare}
         possibleMoves={clickToMove.possibleMoves}
-        piecesWithMoves={clickToMove.piecesWithMoves}
+        piecesWithMoves={
+          gameState.mode === "explore"
+            ? explorePiecesWithMoves
+            : clickToMove.piecesWithMoves
+        }
       >
         <OpeningControls
           isPlayingOpening={gameState.isPlayingOpening}

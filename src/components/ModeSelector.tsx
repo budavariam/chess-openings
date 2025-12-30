@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { ChessMode } from "../types";
 
 interface ModeSelectorProps {
@@ -9,13 +9,13 @@ interface ModeSelectorProps {
   logAction: (action: string, details?: any) => void;
 }
 
-export const ModeSelector: React.FC<ModeSelectorProps> = ({
+export function ModeSelector({
   mode,
   setMode,
   setIsPlayingOpening,
   resetGame,
   logAction,
-}) => {
+}: ModeSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleModeChange = (newMode: ChessMode) => {
@@ -28,6 +28,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
 
   const modes: { key: ChessMode; label: string; icon: string }[] = [
     { key: "practice", label: "Practice", icon: "♟️" },
+    { key: "explore", label: "Explore", icon: "🧭" },
     { key: "search", label: "Search", icon: "🔍" },
     { key: "popular", label: "Popular", icon: "⭐" },
     { key: "favourites", label: "Favourites", icon: "❤️" },
@@ -112,4 +113,4 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
       </div>
     </>
   );
-};
+}
