@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, CSSProperties } from "react";
 import type { Opening } from "../types";
 import type { BoardOrientation } from "../types";
-import { boardThemes, BoardTheme } from "../components/ChessBoard";
+import { boardThemes } from "../components/ChessBoard";
 import { toast } from "react-toastify";
 
 interface OpeningControlsProps {
@@ -40,7 +40,7 @@ export function OpeningControls({
   logAction,
 }: OpeningControlsProps) {
   const [showStyleSelector, setShowStyleSelector] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<React.CSSProperties>(
+  const [dropdownPosition, setDropdownPosition] = useState<CSSProperties>(
     {},
   );
   const buttonRef = useRef<HTMLButtonElement>(null);

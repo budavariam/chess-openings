@@ -1,4 +1,4 @@
-import React from "react";
+
 import type { Opening, ChessMode } from "../types";
 import { OpeningItem, getOpeningId } from "./OpeningItem";
 

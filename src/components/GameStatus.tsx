@@ -1,4 +1,3 @@
-import React from "react";
 import { ExternalExplorer } from "./ExternalExplorer";
 import { OpeningItem, getOpeningId } from "./OpeningItem";
 import type { Opening, ChessMode } from "../types";
@@ -51,38 +50,40 @@ export function GameStatus({
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-4">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-gray-900 dark:text-white">
-              Matched Opening
-            </h3>
-          </div>
-
-          {matchedOpening ? (
-            <div className="space-y-3">
-              <OpeningItem
-                opening={matchedOpening}
-                isFavourite={favouriteIds.includes(
-                  getOpeningId(matchedOpening),
-                )}
-                toggleFavourite={toggleFavourite}
-                onStudy={onStudyOpening}
-                variant="expanded"
-                mode={mode}
-                className="!p-3"
-              />
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
-                <ExternalExplorer
-                  matchedOpening={matchedOpening}
-                  popularMovesIndex={popularMovesIndex}
-                  logAction={logAction}
-                />
-              </div>
+        {mode !== "search" && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-gray-900 dark:text-white">
+                Matched Opening
+              </h3>
             </div>
-          ) : (
-            <div className="text-gray-500">No match</div>
-          )}
-        </div>
+
+            {matchedOpening ? (
+              <div className="space-y-3">
+                <OpeningItem
+                  opening={matchedOpening}
+                  isFavourite={favouriteIds.includes(
+                    getOpeningId(matchedOpening),
+                  )}
+                  toggleFavourite={toggleFavourite}
+                  onStudy={onStudyOpening}
+                  variant="expanded"
+                  mode={mode}
+                  className="!p-3"
+                />
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <ExternalExplorer
+                    matchedOpening={matchedOpening}
+                    popularMovesIndex={popularMovesIndex}
+                    logAction={logAction}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-500">No match</div>
+            )}
+          </div>
+        )}
 
         <div>
           <h3 className="font-medium text-gray-900 dark:text-white mb-2">

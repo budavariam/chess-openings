@@ -1,7 +1,5 @@
 import { Chess } from "chess.js";
-import type { Opening } from "../types";
 
-// Calculate popularity based on eco.json source quality
 export function calculatePopularity(data: any): number {
   if (data.src === "eco_tsv") return 100; // Lichess data is most authoritative
   if (data.isEcoRoot) return 95; // Root variations are important

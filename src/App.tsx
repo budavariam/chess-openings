@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import ChessPractice from "./ChessPractice";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,14 +10,12 @@ export default function App() {
       if (saved !== null) {
         return saved === "dark";
       }
-      // Default to system preference instead of true
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
     } catch (e) {
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
   });
 
-  // Apply dark class to document element on mount and when dark state changes
   useEffect(() => {
     if (dark) {
       document.documentElement.classList.add("dark");
