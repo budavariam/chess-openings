@@ -144,7 +144,44 @@ export function useGameState() {
   const navigateToMove = useCallback(
     (targetIndex: number, popularSorted: Opening[]) => {
       try {
-        // Always use move history for navigation to support undo/redo
+        // If playing an opening, navigate through opening moves
+        if (state.isPlayingOpening) {
+          const chosen =
+            state.matchedOpening || popularSorted[state.popularIndex];
+
+          if (!chosen) {
+            toast.error("No opening selected");
+            return;
+          }
+
+          const maxMoves = chosen.moves.length;
+          const safeIndex = Math.max(0, Math.min(targetIndex, maxMoves));
+
+          const g = new Chess();
+          for (let i = 0; i < safeIndex; i++) {
+            if (i < chosen.moves.length) {
+              const move = g.move(chosen.moves[i]);
+              if (!move) {
+                console.error("Failed to apply move during navigation:", {
+                  moveIndex: i,
+                  move: chosen.moves[i],
+                });
+                break;
+              }
+            }
+          }
+
+          updateGameState(g, safeIndex);
+
+          if (safeIndex === 0) {
+            toast.info("Moved to start position");
+          } else {
+            toast.info(`Moved to ${chosen.moves[safeIndex - 1]}`);
+          }
+          return;
+        }
+
+        // In practice/explore mode, navigate through move history
         if (state.moveHistory.length > 0) {
           const safeIndex = Math.max(
             0,
@@ -178,48 +215,14 @@ export function useGameState() {
           return;
         }
 
-        // If no move history but playing an opening, navigate through opening moves
-        const chosen =
-          state.matchedOpening || popularSorted[state.popularIndex];
-
-        if (!chosen) {
-          toast.error("No moves to navigate");
-          return;
-        }
-
-        const maxMoves = chosen.moves.length;
-        const safeIndex = Math.max(0, Math.min(targetIndex, maxMoves));
-
-        const g = new Chess();
-        for (let i = 0; i < safeIndex; i++) {
-          if (i < chosen.moves.length) {
-            const move = g.move(chosen.moves[i]);
-            if (!move) {
-              console.error("Failed to apply move during navigation:", {
-                moveIndex: i,
-                move: chosen.moves[i],
-              });
-              break;
-            }
-          }
-        }
-
-        dispatch({
-          type: "NAVIGATE_TO_INDEX",
-          payload: { game: g, popularMovesIndex: safeIndex },
-        });
-
-        if (safeIndex === 0) {
-          toast.info("Moved to start position");
-        } else {
-          toast.info(`Moved to ${chosen.moves[safeIndex - 1]}`);
-        }
+        toast.error("No moves to navigate");
       } catch (error: any) {
         console.error("[Navigation] Error:", error.message);
         toast.error(`Navigation failed: ${error.message}`);
       }
     },
     [
+      state.isPlayingOpening,
       state.matchedOpening,
       state.moveHistory,
       state.popularIndex,
