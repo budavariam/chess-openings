@@ -25,6 +25,13 @@ type GameAction =
         popularMovesIndex: number;
       };
     }
+  | {
+      type: "NAVIGATE_TO_INDEX";
+      payload: {
+        game: Chess;
+        popularMovesIndex: number;
+      };
+    }
   | { type: "SET_MODE"; payload: ChessMode }
   | { type: "SET_MATCHED_OPENING"; payload: Opening | null }
   | { type: "SET_POPULAR_INDEX"; payload: number }
@@ -42,6 +49,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         game: action.payload.game,
         moveHistory: action.payload.moveHistory,
+        popularMovesIndex: action.payload.popularMovesIndex,
+      };
+    case "NAVIGATE_TO_INDEX":
+      return {
+        ...state,
+        game: action.payload.game,
         popularMovesIndex: action.payload.popularMovesIndex,
       };
     case "SET_MODE":
@@ -152,7 +165,10 @@ export function useGameState() {
             }
           }
 
-          updateGameState(g, safeIndex);
+          dispatch({
+            type: "NAVIGATE_TO_INDEX",
+            payload: { game: g, popularMovesIndex: safeIndex },
+          });
 
           if (safeIndex === 0) {
             toast.info("Moved to start position");
@@ -188,7 +204,10 @@ export function useGameState() {
           }
         }
 
-        updateGameState(g, safeIndex);
+        dispatch({
+          type: "NAVIGATE_TO_INDEX",
+          payload: { game: g, popularMovesIndex: safeIndex },
+        });
 
         if (safeIndex === 0) {
           toast.info("Moved to start position");
