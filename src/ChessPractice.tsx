@@ -296,8 +296,6 @@ export default function ChessPractice() {
           showCoordinates={preferences.showCoordinates}
           onThemeChange={preferences.setBoardTheme}
           onCoordinatesToggle={preferences.setShowCoordinates}
-          clickToMoveMode={clickToMove.enabled}
-          onClickToMoveToggle={clickToMove.toggleEnabled}
           logAction={() => {}}
         />
       </ChessBoard>

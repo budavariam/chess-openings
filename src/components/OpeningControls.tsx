@@ -16,8 +16,6 @@ interface OpeningControlsProps {
   showCoordinates?: boolean;
   onThemeChange?: (theme: string) => void;
   onCoordinatesToggle?: (show: boolean) => void;
-  clickToMoveMode?: boolean;
-  onClickToMoveToggle?: (enabled: boolean) => void;
   logAction: (action: string, details?: any) => void;
 }
 
@@ -35,8 +33,6 @@ export function OpeningControls({
   showCoordinates = true,
   onThemeChange,
   onCoordinatesToggle,
-  clickToMoveMode = false,
-  onClickToMoveToggle,
   logAction,
 }: OpeningControlsProps) {
   const [showStyleSelector, setShowStyleSelector] = useState(false);
@@ -284,21 +280,6 @@ export function OpeningControls({
                 className={`text-xs ${showCoordinates ? "text-green-600" : "text-gray-400"}`}
               >
                 {showCoordinates ? "✓" : "○"}
-              </span>
-            </button>
-
-            <button
-              onClick={() => {
-                onClickToMoveToggle?.(!clickToMoveMode);
-                setShowStyleSelector(false);
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
-            >
-              <span>Click to Move</span>
-              <span
-                className={`text-xs ${clickToMoveMode ? "text-green-600" : "text-gray-400"}`}
-              >
-                {clickToMoveMode ? "✓" : "○"}
               </span>
             </button>
           </div>
