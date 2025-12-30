@@ -27,18 +27,18 @@ export function useClickToMove(
     toast.success(`${!enabled ? "Enabled" : "Disabled"} click-to-move mode`);
   }, [enabled]);
 
-  // Get all possible opening moves for current position
+  const isActive = mode === "explore";
+
   const allOpeningMoves = useMemo(() => {
-    if (!enabled || mode !== "practice") return [];
+    if (!isActive) return [];
 
     const key = moveHistory.join("|");
     const moves = openingMovesIndex.get(key);
     return moves ? Array.from(moves) : [];
-  }, [enabled, mode, moveHistory, openingMovesIndex]);
+  }, [isActive, moveHistory, openingMovesIndex]);
 
-  // Calculate possible destination squares for selected piece
   const possibleMoves = useMemo(() => {
-    if (!enabled || !selectedSquare || mode !== "practice") return [];
+    if (!isActive || !selectedSquare) return [];
 
     const moves = game.moves({
       square: selectedSquare as Square,
@@ -48,11 +48,10 @@ export function useClickToMove(
     return moves
       .filter((move) => allOpeningMoves.includes(move.san))
       .map((move) => move.to);
-  }, [enabled, selectedSquare, game, mode, allOpeningMoves]);
+  }, [isActive, selectedSquare, game, allOpeningMoves]);
 
-  // Calculate which pieces have possible opening moves
   const piecesWithMoves = useMemo(() => {
-    if (!enabled || mode !== "practice") return [];
+    if (!isActive) return [];
 
     const squares: string[] = [];
     const allMoves = game.moves({ verbose: true }) as Move[];
@@ -64,11 +63,11 @@ export function useClickToMove(
     });
 
     return squares;
-  }, [enabled, game, mode, allOpeningMoves]);
+  }, [isActive, game, allOpeningMoves]);
 
   const onSquareClick = useCallback(
     (square: string) => {
-      if (!enabled || mode !== "practice") return;
+      if (!isActive) return;
 
       const piece = game.get(square as Square);
 
@@ -93,14 +92,14 @@ export function useClickToMove(
         setSelectedSquare(null);
       }
     },
-    [enabled, mode, selectedSquare, possibleMoves, game, onMove],
+    [isActive, selectedSquare, possibleMoves, game, onMove],
   );
 
   return {
     enabled,
-    selectedSquare,
-    possibleMoves,
-    piecesWithMoves,
+    selectedSquare: isActive ? selectedSquare : null,
+    possibleMoves: isActive ? possibleMoves : [],
+    piecesWithMoves: isActive ? piecesWithMoves : [],
     toggleEnabled,
     onSquareClick,
   };

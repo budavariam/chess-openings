@@ -77,26 +77,6 @@ export default function ChessPractice() {
 
   const suggestions = useSuggestions(gameState.moveHistory, openings);
 
-  const explorePiecesWithMoves = useMemo(() => {
-    if (gameState.mode !== "explore") return [];
-
-    const key = gameState.moveHistory.join("|");
-    const availableMoves = openingMovesIndex.get(key);
-    if (!availableMoves) return [];
-
-    const allOpeningMoves = Array.from(availableMoves);
-    const squares: string[] = [];
-    const allMoves = gameState.game.moves({ verbose: true });
-
-    allMoves.forEach((move: any) => {
-      if (allOpeningMoves.includes(move.san) && !squares.includes(move.from)) {
-        squares.push(move.from);
-      }
-    });
-
-    return squares;
-  }, [gameState.mode, gameState.moveHistory, gameState.game, openingMovesIndex]);
-
   const onPieceDrop = useCallback(
     (args: PieceDropHandlerArgs): boolean => {
       const { sourceSquare, targetSquare } = args;
@@ -266,23 +246,15 @@ export default function ChessPractice() {
       <ChessBoard
         position={gameState.game.fen()}
         boardOrientation={gameState.boardOrientation}
-        onPieceDrop={
-          clickToMove.enabled && gameState.mode === "practice"
-            ? () => false
-            : onPieceDrop
-        }
+        onPieceDrop={gameState.mode === "explore" ? () => false : onPieceDrop}
         onSquareClick={clickToMove.onSquareClick}
         game={gameState.game}
         boardTheme={preferences.boardTheme}
         showCoordinates={preferences.showCoordinates}
-        clickToMoveMode={clickToMove.enabled && gameState.mode === "practice"}
+        clickToMoveMode={gameState.mode === "explore"}
         selectedSquare={clickToMove.selectedSquare}
         possibleMoves={clickToMove.possibleMoves}
-        piecesWithMoves={
-          gameState.mode === "explore"
-            ? explorePiecesWithMoves
-            : clickToMove.piecesWithMoves
-        }
+        piecesWithMoves={clickToMove.piecesWithMoves}
       >
         <OpeningControls
           isPlayingOpening={gameState.isPlayingOpening}
