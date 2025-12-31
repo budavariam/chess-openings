@@ -60,8 +60,22 @@ export default function ChessPractice() {
           move: move.san,
           beforeHistory: gameState.moveHistory,
           afterHistory: g.history(),
+          willBeHistory: [...gameState.moveHistory, move.san],
         });
-        updateGameState(g);
+
+        // Manually preserve move history since Chess instances created from FEN
+        // don't retain the history of moves that led to that position
+        const newMoveHistory = [...gameState.moveHistory, move.san];
+
+        dispatch({
+          type: "SET_GAME_STATE",
+          payload: {
+            game: g,
+            moveHistory: newMoveHistory,
+            popularMovesIndex: newMoveHistory.length,
+          },
+        });
+
         if (gameState.isPlayingOpening) {
           dispatch({ type: "EXIT_OPENING_STUDY" });
           toast.info("Exited opening study mode");
@@ -100,7 +114,18 @@ export default function ChessPractice() {
           return false;
         }
 
-        updateGameState(g);
+        // Manually preserve move history since Chess instances created from FEN
+        // don't retain the history of moves that led to that position
+        const newMoveHistory = [...gameState.moveHistory, move.san];
+
+        dispatch({
+          type: "SET_GAME_STATE",
+          payload: {
+            game: g,
+            moveHistory: newMoveHistory,
+            popularMovesIndex: newMoveHistory.length,
+          },
+        });
 
         if (gameState.isPlayingOpening) {
           dispatch({ type: "EXIT_OPENING_STUDY" });
@@ -112,7 +137,7 @@ export default function ChessPractice() {
         return false;
       }
     },
-    [gameState.game, gameState.isPlayingOpening, updateGameState, dispatch],
+    [gameState.game, gameState.isPlayingOpening, gameState.moveHistory, dispatch],
   );
 
   const searchResults = useMemo(() => {
