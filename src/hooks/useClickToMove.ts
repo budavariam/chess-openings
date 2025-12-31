@@ -34,7 +34,17 @@ export function useClickToMove(
 
     const key = moveHistory.join("|");
     const moves = openingMovesIndex.get(key);
-    return moves ? Array.from(moves) : [];
+    const result = moves ? Array.from(moves) : [];
+
+    console.log("[useClickToMove] Opening moves lookup:", {
+      moveHistory,
+      key,
+      foundMoves: result.length,
+      moves: result,
+      indexSize: openingMovesIndex.size,
+    });
+
+    return result;
   }, [isActive, moveHistory, openingMovesIndex]);
 
   const possibleMoves = useMemo(() => {

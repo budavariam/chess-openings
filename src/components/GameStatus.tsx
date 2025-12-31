@@ -50,7 +50,7 @@ export function GameStatus({
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-4">
-        {mode !== "search" && mode !== "explore" && (
+        {mode !== "search" && (
           <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium text-gray-900 dark:text-white">
