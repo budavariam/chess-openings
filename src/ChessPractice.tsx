@@ -56,6 +56,11 @@ export default function ChessPractice() {
       });
 
       if (move) {
+        console.log("[ChessPractice] Move made:", {
+          move: move.san,
+          beforeHistory: gameState.moveHistory,
+          afterHistory: g.history(),
+        });
         updateGameState(g);
         if (gameState.isPlayingOpening) {
           dispatch({ type: "EXIT_OPENING_STUDY" });

@@ -38,9 +38,11 @@ export function useClickToMove(
 
     console.log("[useClickToMove] Opening moves lookup:", {
       moveHistory,
+      moveHistoryLength: moveHistory.length,
+      moveHistoryContent: JSON.stringify(moveHistory),
       key,
       foundMoves: result.length,
-      moves: result,
+      moves: result.slice(0, 5), // Show first 5 moves
       indexSize: openingMovesIndex.size,
     });
 

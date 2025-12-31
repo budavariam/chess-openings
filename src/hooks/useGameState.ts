@@ -109,6 +109,12 @@ export function useGameState() {
     const moveHistory = [...game.history()];
     const popularMovesIndex = safeIndex ?? moveHistory.length;
 
+    console.log("[updateGameState] Updating:", {
+      moveHistory,
+      popularMovesIndex,
+      safeIndex,
+    });
+
     dispatch({
       type: "SET_GAME_STATE",
       payload: { game, moveHistory, popularMovesIndex },
