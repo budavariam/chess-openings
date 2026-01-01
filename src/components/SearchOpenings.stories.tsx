@@ -1,0 +1,97 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import { SearchOpenings } from './SearchOpenings';
+import type { Opening } from '../types';
+
+const sampleOpenings: Opening[] = [
+  {
+    name: 'Italian Game',
+    eco: 'C50',
+    fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'],
+    popularity: 95,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+  {
+    name: 'Sicilian Defense',
+    eco: 'B20',
+    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+    moves: ['e4', 'c5'],
+    popularity: 98,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+  {
+    name: 'French Defense',
+    eco: 'C00',
+    fen: 'rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+    moves: ['e4', 'e6'],
+    popularity: 85,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+];
+
+const meta = {
+  title: 'Components/SearchOpenings',
+  component: SearchOpenings,
+  parameters: {
+    layout: 'padded',
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    mode: {
+      control: 'select',
+      options: ['practice', 'explore', 'search', 'popular', 'favourites'],
+    },
+  },
+  args: {
+    setSearchQuery: () => {},
+    startSearchResult: () => {},
+    toggleFavourite: () => {},
+    favouriteIds: [],
+    mode: 'search',
+  },
+} satisfies Meta<typeof SearchOpenings>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const EmptySearch: Story = {
+  args: {
+    searchQuery: '',
+    searchResults: [],
+  },
+};
+
+export const SearchWithQuery: Story = {
+  args: {
+    searchQuery: 'sicilian',
+    searchResults: [],
+  },
+};
+
+export const SearchWithResults: Story = {
+  args: {
+    searchQuery: 'italian',
+    searchResults: sampleOpenings,
+  },
+};
+
+export const SearchWithFavourites: Story = {
+  args: {
+    searchQuery: 'defense',
+    searchResults: sampleOpenings,
+    favouriteIds: ['B20', 'C00'],
+  },
+};
+
+export const SearchWithSingleResult: Story = {
+  args: {
+    searchQuery: 'C50',
+    searchResults: [sampleOpenings[0]],
+  },
+};

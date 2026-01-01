@@ -4,3 +4,5 @@ node_modules/
 eco.json/*
 src/eco.json/
 .claude/settings.local.json
+*storybook.log
+storybook-static

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import ChessPractice from "./ChessPractice";
+import { Footer } from "./components/Footer";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function App() {
@@ -51,6 +52,7 @@ export default function App() {
       <main className="min-w-[320px] p-3 sm:p-6">
         <ChessPractice />
       </main>
+      <Footer />
       <ToastContainer
         position="bottom-right"
         autoClose={3000}

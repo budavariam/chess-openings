@@ -29,6 +29,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Build Storybook
+        run: npm run build-storybook -- -o dist/storybook
+        env:
+          NODE_ENV: production
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

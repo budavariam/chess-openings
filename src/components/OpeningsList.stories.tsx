@@ -1,0 +1,146 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import { OpeningsList } from './PopularOpenings';
+import type { Opening } from '../types';
+
+const sampleOpenings: Opening[] = [
+  {
+    name: 'Italian Game',
+    eco: 'C50',
+    fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3',
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4'],
+    popularity: 95,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+  {
+    name: 'Sicilian Defense',
+    eco: 'B20',
+    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+    moves: ['e4', 'c5'],
+    popularity: 98,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+  {
+    name: 'French Defense',
+    eco: 'C00',
+    fen: 'rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+    moves: ['e4', 'e6'],
+    popularity: 85,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+  {
+    name: "Caro-Kann Defense",
+    eco: 'B10',
+    fen: 'rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+    moves: ['e4', 'c6'],
+    popularity: 82,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+  {
+    name: 'Pirc Defense',
+    eco: 'B07',
+    fen: 'rnbqkb1r/ppp1pppp/3p1n2/8/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3',
+    moves: ['e4', 'd6', 'd4', 'Nf6'],
+    popularity: 70,
+    src: 'eco_tsv',
+    isEcoRoot: true,
+    aliases: {},
+  },
+];
+
+const meta = {
+  title: 'Components/OpeningsList',
+  component: OpeningsList,
+  parameters: {
+    layout: 'padded',
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    mode: {
+      control: 'select',
+      options: ['practice', 'explore', 'search', 'popular', 'favourites'],
+    },
+  },
+  args: {
+    startPopularAt: () => {},
+    toggleFavourite: () => {},
+    favouriteIds: [],
+    moveHistory: [],
+    mode: 'popular',
+  },
+} satisfies Meta<typeof OpeningsList>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const PopularOpenings: Story = {
+  args: {
+    title: 'Popular Openings',
+    openings: sampleOpenings,
+  },
+};
+
+export const PopularOpeningsWithSubtitle: Story = {
+  args: {
+    title: 'Popular Openings',
+    subtitle: '(filtered by current position)',
+    openings: sampleOpenings,
+    moveHistory: ['e4'],
+  },
+};
+
+export const PossibleOpeningsFromSquare: Story = {
+  args: {
+    title: 'Possible Openings',
+    subtitle: 'from E2',
+    openings: sampleOpenings,
+    moveHistory: [],
+  },
+};
+
+export const WithFavourites: Story = {
+  args: {
+    title: 'Popular Openings',
+    openings: sampleOpenings,
+    favouriteIds: ['C50', 'B20'],
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    title: 'Popular Openings',
+    openings: [],
+  },
+};
+
+export const SingleOpening: Story = {
+  args: {
+    title: 'Popular Openings',
+    openings: [sampleOpenings[0]],
+  },
+};
+
+export const ManyOpenings: Story = {
+  args: {
+    title: 'Popular Openings',
+    subtitle: '(showing top 20)',
+    openings: [...sampleOpenings, ...sampleOpenings, ...sampleOpenings, ...sampleOpenings],
+    maxItems: 20,
+  },
+};
+
+export const LimitedMaxItems: Story = {
+  args: {
+    title: 'Possible Openings',
+    subtitle: 'from E4',
+    openings: sampleOpenings,
+    maxItems: 3,
+  },
+};
