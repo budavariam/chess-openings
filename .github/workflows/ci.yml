@@ -1,3 +1,4 @@
+
 name: Deploy to GitHub Pages
 
 on:
@@ -20,46 +21,27 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Debug and fix submodule issues
+      - name: Verify submodule
         run: |
-          echo "=== Checking .gitmodules ==="
-          cat .gitmodules
-          echo ""
           echo "=== Git submodule status ==="
           git submodule status
-          echo ""
-          echo "=== Listing src directory ==="
-          ls -la src/
-          echo ""
           
-          # Clean any stale submodule state
-          rm -rf .git/modules/eco.json 2>/dev/null || true
-          rm -rf .git/modules/src/eco.json 2>/dev/null || true
-          
-          # Force sync and update
-          git submodule sync --recursive
-          git submodule update --init --recursive --force
-          
-          echo ""
-          echo "=== After submodule update ==="
-          if [ -d "src/eco.json" ]; then
-            ls -la src/eco.json/
-          else
-            echo "FATAL: src/eco.json directory does not exist"
-            echo "Checking if submodule was cloned elsewhere:"
-            find . -name "ecoA.json" -o -name "ecoB.json"
+          # Check if submodule is registered
+          if [ -z "$(git submodule status)" ]; then
+            echo "FATAL: No submodules are registered!"
+            echo "The .gitmodules file exists but the submodule isn't in the git index."
+            echo "Run locally: git submodule add https://github.com/hayatbiralem/eco.json.git src/eco.json"
             exit 1
           fi
           
-          # Verify all required files
+          # Verify files exist
+          ls -la src/eco.json/
+          
           for file in ecoA.json ecoB.json ecoC.json ecoD.json ecoE.json; do
-            if [ ! -f "src/eco.json/$file" ]; then
-              echo "FATAL: Missing src/eco.json/$file"
-              exit 1
-            fi
+            test -f "src/eco.json/$file" || (echo "FATAL: Missing $file" && exit 1)
           done
           
-          echo "✓ All submodule files verified successfully"
+          echo "✓ Submodule verified successfully"
 
       - name: Set up Node
         uses: actions/setup-node@v4
