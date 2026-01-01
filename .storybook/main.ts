@@ -16,7 +16,6 @@ const config: StorybookConfig = {
     options: {}
   },
   viteFinal: async (config) => {
-    // Set the base path for production builds
     if (process.env.NODE_ENV === 'production') {
       config.base = '/chess-openings/storybook/';
     }

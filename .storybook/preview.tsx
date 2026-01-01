@@ -42,7 +42,6 @@ const preview: Preview = {
     (Story, context) => {
       const theme = context.globals.theme || 'light';
 
-      // Apply theme class to document
       if (typeof document !== 'undefined') {
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');

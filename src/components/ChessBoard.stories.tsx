@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Chess } from 'chess.js';
 import { ChessBoard } from './ChessBoard';
 
-// Create Chess instances for different positions
 const startGame = new Chess();
 
 const middleGame = new Chess();
