@@ -1,8 +1,6 @@
 node_modules/
 /dist
 .env
-eco.json/*
-src/eco.json/
 .claude/settings.local.json
 *storybook.log
 storybook-static

@@ -33,6 +33,12 @@ const meta = {
       control: 'select',
       options: ['default', 'green', 'blue', 'brown', 'purple', 'pink'],
     },
+    game: {
+      control: false,
+    },
+    position: {
+      control: false,
+    },
   },
   args: {
     onPieceDrop: () => false,
