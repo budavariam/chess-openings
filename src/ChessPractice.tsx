@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useEffect } from "react";
-import { Chess, Square } from "chess.js";
+import { Chess, Square, Move } from "chess.js";
 import { PieceDropHandlerArgs } from "react-chessboard";
 import { toast } from "react-toastify";
 import type { Opening, ChessMode, BoardOrientation } from "./types";
@@ -9,7 +9,7 @@ import { GameStatus } from "./components/GameStatus";
 import { OpeningControls } from "./components/OpeningControls";
 import { SearchOpenings } from "./components/SearchOpenings";
 import { SuggestedMoves } from "./components/SuggestedMoves";
-import { PopularOpenings } from "./components/PopularOpenings";
+import { PopularOpenings, OpeningsList } from "./components/PopularOpenings";
 import { FavouriteOpenings } from "./components/FavouriteOpenings";
 import { getOpeningId } from "./components/OpeningItem";
 import { useOpenings, useOpeningMatch } from "./hooks/useOpenings";
@@ -189,6 +189,55 @@ export default function ChessPractice() {
       .slice(0, 100);
   }, [openings, gameState.moveHistory]);
 
+  // Calculate openings for selected piece in explore mode
+  const selectedPieceOpenings = useMemo(() => {
+    if (gameState.mode !== "explore" || !clickToMove.selectedSquare) {
+      return [];
+    }
+
+    // Get all possible moves from the selected square in SAN notation
+    const moves = gameState.game.moves({
+      square: clickToMove.selectedSquare as Square,
+      verbose: true,
+    }) as Move[];
+
+    const sanMoves = moves.map((m) => m.san);
+
+    // Filter openings where the next move matches any of the selected piece's moves
+    const filtered = openings.filter((opening) => {
+      if (opening.moves.length <= gameState.moveHistory.length) return false;
+
+      // Check if all previous moves match
+      const historyMatches = gameState.moveHistory.every(
+        (move, i) => opening.moves[i] === move
+      );
+      if (!historyMatches) return false;
+
+      // Check if the next move is one of the selected piece's moves
+      const nextMove = opening.moves[gameState.moveHistory.length];
+      return sanMoves.includes(nextMove);
+    });
+
+    // Sort by popularity
+    return filtered
+      .slice()
+      .sort((a, b) => {
+        if (b.popularity !== a.popularity) return b.popularity - a.popularity;
+        if (a.src === "eco_tsv" && b.src !== "eco_tsv") return -1;
+        if (b.src === "eco_tsv" && a.src !== "eco_tsv") return 1;
+        if (a.isEcoRoot && !b.isEcoRoot) return -1;
+        if (b.isEcoRoot && !a.isEcoRoot) return 1;
+        return 0;
+      })
+      .slice(0, 20);
+  }, [
+    gameState.mode,
+    gameState.game,
+    gameState.moveHistory,
+    clickToMove.selectedSquare,
+    openings,
+  ]);
+
   const startPopularAt = useCallback(
     (index: number) => {
       try {
@@ -341,6 +390,20 @@ export default function ChessPractice() {
             toggleFavourite={preferences.toggleFavourite}
             favouriteIds={preferences.favouriteIds}
             mode={gameState.mode}
+          />
+        )}
+
+        {gameState.mode === "explore" && clickToMove.selectedSquare && (
+          <OpeningsList
+            title="Possible Openings"
+            subtitle={`from ${clickToMove.selectedSquare.toUpperCase()}`}
+            moveHistory={gameState.moveHistory}
+            openings={selectedPieceOpenings}
+            startPopularAt={startPopularAt}
+            toggleFavourite={preferences.toggleFavourite}
+            favouriteIds={preferences.favouriteIds}
+            mode={gameState.mode}
+            maxItems={15}
           />
         )}
 
