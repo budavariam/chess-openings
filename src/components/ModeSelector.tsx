@@ -39,7 +39,7 @@ export function ModeSelector({
   return (
     <>
       {/* Desktop version - shows all modes horizontally */}
-      <div className="hidden md:flex gap-1 p-1 bg-gray-200 dark:bg-gray-800 rounded-lg">
+      <div className="hidden lg:flex gap-1 p-1 bg-gray-200 dark:bg-gray-800 rounded-lg">
         {modes.map(({ key, label, icon }) => (
           <button
             key={key}
@@ -57,7 +57,7 @@ export function ModeSelector({
       </div>
 
       {/* Mobile version - dropdown with current mode displayed */}
-      <div className="md:hidden relative">
+      <div className="lg:hidden relative">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-800 rounded-lg text-sm font-medium transition-colors flex items-center justify-between gap-2 text-gray-900 dark:text-gray-100"
