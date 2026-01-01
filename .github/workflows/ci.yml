@@ -1,3 +1,4 @@
+
 name: Deploy to GitHub Pages
 
 on:
@@ -20,10 +21,34 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Update submodules
+      - name: Debug - Check submodule status
+        run: |
+          echo "=== Git submodule status ==="
+          git submodule status
+          echo ""
+          echo "=== .gitmodules content ==="
+          cat .gitmodules
+          echo ""
+          echo "=== Checking src directory ==="
+          ls -la src/
+          echo ""
+          echo "=== Checking if eco.json directory exists ==="
+          if [ -d "src/eco.json" ]; then
+            echo "eco.json directory exists"
+            ls -la src/eco.json/
+          else
+            echo "eco.json directory DOES NOT exist"
+          fi
+          echo ""
+          echo "=== Full directory tree (limited depth) ==="
+          find src -maxdepth 3 -type f -name "*.json" || echo "No JSON files found"
+
+      - name: Ensure submodules are initialized
         run: |
           git submodule sync --recursive
-          git submodule update --init --recursive
+          git submodule update --init --recursive --force
+          echo "=== After manual submodule update ==="
+          ls -la src/eco.json/ || echo "Still no eco.json directory"
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -33,6 +58,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Debug - Check files before build
+        run: |
+          echo "=== Final check before build ==="
+          ls -la src/eco.json/ || echo "eco.json directory missing before build"
+          pwd
+          echo "=== useOpenings.ts import check ==="
+          head -20 src/hooks/useOpenings.ts
 
       - name: Build
         run: npm run build
