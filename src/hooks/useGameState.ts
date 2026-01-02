@@ -30,6 +30,7 @@ type GameAction =
       payload: {
         game: Chess;
         popularMovesIndex: number;
+        moveHistory?: string[];
       };
     }
   | { type: "SET_MODE"; payload: ChessMode }
@@ -56,6 +57,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         game: action.payload.game,
         popularMovesIndex: action.payload.popularMovesIndex,
+        moveHistory: action.payload.moveHistory ?? state.moveHistory,
       };
     case "SET_MODE":
       return { ...state, mode: action.payload };
@@ -127,7 +129,25 @@ export function useGameState() {
         const g = new Chess(state.game.fen());
         const move = g.move(moveStr);
         if (move) {
-          updateGameState(g);
+          // Preserve and extend move history
+          const newMoveHistory = [...state.moveHistory, move.san];
+          const popularMovesIndex = newMoveHistory.length;
+
+          console.log("[makeMove] Move made:", {
+            move: move.san,
+            newMoveHistory,
+            popularMovesIndex,
+          });
+
+          dispatch({
+            type: "SET_GAME_STATE",
+            payload: {
+              game: g,
+              moveHistory: newMoveHistory,
+              popularMovesIndex,
+            },
+          });
+
           toast.success(`Played ${move.san}`);
 
           if (state.isPlayingOpening) {
@@ -144,7 +164,7 @@ export function useGameState() {
         return false;
       }
     },
-    [state.game, state.isPlayingOpening, updateGameState],
+    [state.game, state.isPlayingOpening, state.moveHistory],
   );
 
   const navigateToMove = useCallback(
@@ -216,9 +236,18 @@ export function useGameState() {
             }
           }
 
+          // Trim move history in explore mode to allow exploring different branches
+          const trimmedHistory = state.mode === "explore"
+            ? state.moveHistory.slice(0, safeIndex)
+            : state.moveHistory;
+
           dispatch({
             type: "NAVIGATE_TO_INDEX",
-            payload: { game: g, popularMovesIndex: safeIndex },
+            payload: {
+              game: g,
+              popularMovesIndex: safeIndex,
+              moveHistory: trimmedHistory,
+            },
           });
 
           if (safeIndex === 0) {
@@ -240,6 +269,7 @@ export function useGameState() {
       state.matchedOpening,
       state.moveHistory,
       state.popularIndex,
+      state.mode,
       updateGameState,
     ],
   );
