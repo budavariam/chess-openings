@@ -1,5 +1,5 @@
 import { renderHook as originalRenderHook, render as originalRender } from '@testing-library/react';
-import { ToastSettingsProvider } from './ToastSettingsProvider';
+import { ToastSettingsProvider } from '../contexts/ToastSettingsContext';
 import type { ReactNode } from 'react';
 
 const AllProviders = ({ children }: { children: ReactNode }) => (
