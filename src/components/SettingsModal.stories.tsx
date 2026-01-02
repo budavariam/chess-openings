@@ -24,7 +24,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Wrapper component to manage state
 function SettingsModalWrapper(props: Partial<typeof SettingsModal>) {
   const [settings, setSettings] = useState<ToastSettings>(
     props.settings || DEFAULT_TOAST_SETTINGS

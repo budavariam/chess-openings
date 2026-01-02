@@ -18,7 +18,7 @@ export type ToastPosition =
 
 export interface ToastNotificationSettings {
   enabled: boolean;
-  duration: number; // in milliseconds
+  duration: number;
 }
 
 export interface ToastSettings {
@@ -26,7 +26,6 @@ export interface ToastSettings {
   success: ToastNotificationSettings;
   error: ToastNotificationSettings;
   info: ToastNotificationSettings;
-  // General toast behavior settings
   position: ToastPosition;
   showProgressBar: boolean;
   pauseOnHover: boolean;
@@ -55,14 +54,9 @@ export const DEFAULT_TOAST_SETTINGS: ToastSettings = {
   newestOnTop: false,
 };
 
-/**
- * Migration function for future settings version changes
- * Add new migration cases when MAJOR version changes
- */
 export function migrateToastSettings(
   savedSettings: any
 ): ToastSettings {
-  // If no version or invalid format, return defaults
   if (!savedSettings || typeof savedSettings !== "object") {
     return DEFAULT_TOAST_SETTINGS;
   }
@@ -71,18 +65,10 @@ export function migrateToastSettings(
   const [savedMajor] = savedVersion.split(".").map(Number);
   const [currentMajor] = TOAST_SETTINGS_VERSION.split(".").map(Number);
 
-  // If saved version is current, validate and return
   if (savedVersion === TOAST_SETTINGS_VERSION) {
     return validateToastSettings(savedSettings);
   }
 
-  // Future migration logic goes here
-  // Example:
-  // if (savedMajor < 2) {
-  //   return migrateV1ToV2(savedSettings);
-  // }
-
-  // For now, if major version differs, reset to defaults
   if (savedMajor !== currentMajor) {
     console.warn(
       `Toast settings version mismatch. Resetting to defaults. Saved: ${savedVersion}, Current: ${TOAST_SETTINGS_VERSION}`
@@ -90,13 +76,9 @@ export function migrateToastSettings(
     return DEFAULT_TOAST_SETTINGS;
   }
 
-  // Validate and fill in any missing fields
   return validateToastSettings(savedSettings);
 }
 
-/**
- * Validates and fills in missing fields from saved settings
- */
 function validateToastSettings(
   settings: Partial<ToastSettings>
 ): ToastSettings {

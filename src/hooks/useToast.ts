@@ -2,10 +2,6 @@ import { useCallback } from "react";
 import { toast as reactToast, ToastOptions } from "react-toastify";
 import { useToastSettingsContext } from "../contexts/ToastSettingsContext";
 
-/**
- * Custom toast hook that respects user settings for notifications
- * Wraps react-toastify with user preferences for enabled/disabled states and durations
- */
 export function useToast() {
   const { shouldShowToast, getToastDuration } = useToastSettingsContext();
 

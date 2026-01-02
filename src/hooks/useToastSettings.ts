@@ -12,8 +12,7 @@ export function useToastSettings() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return migrateToastSettings(parsed);
+        return migrateToastSettings(JSON.parse(saved));
       }
     } catch (error) {
       console.error("Failed to load toast settings:", error);
@@ -21,7 +20,6 @@ export function useToastSettings() {
     return DEFAULT_TOAST_SETTINGS;
   });
 
-  // Save to localStorage whenever settings change
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
