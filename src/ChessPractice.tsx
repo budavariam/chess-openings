@@ -189,8 +189,65 @@ export default function ChessPractice() {
       .slice(0, 100);
   }, [openings, gameState.moveHistory]);
 
+const selectedPieceOpenings = useMemo(() => {
+  if (gameState.mode !== "explore" || !clickToMove.selectedSquare) {
+    return [];
+  }
+
+  // Get legal moves from selected piece (already have this)
+  const moves = gameState.game.moves({
+    square: clickToMove.selectedSquare as Square,
+    verbose: true,
+  }) as Move[];
+
+  // Create a map of SAN -> from square for ALL legal moves in current position
+  // Only ONE Chess instance created here!
+  const sanToFromMap = new Map<string, string>();
+  const allLegalMoves = gameState.game.moves({ verbose: true }) as Move[];
+  allLegalMoves.forEach(move => {
+    sanToFromMap.set(move.san, move.from);
+  });
+
+  // Now filter openings using the pre-built map (O(1) lookups)
+  const filtered = openings.filter((opening) => {
+    if (opening.moves.length <= gameState.moveHistory.length) return false;
+
+    // Check if all previous moves match
+    const historyMatches = gameState.moveHistory.every(
+      (move, i) => opening.moves[i] === move
+    );
+    if (!historyMatches) return false;
+
+    // Get the next move in the opening
+    const nextMove = opening.moves[gameState.moveHistory.length];
+    
+    // Check if this move exists and comes from the selected square
+    const fromSquare = sanToFromMap.get(nextMove);
+    return fromSquare === clickToMove.selectedSquare;
+  });
+
+  // Sort by popularity
+  return filtered
+    .slice()
+    .sort((a, b) => {
+      if (b.popularity !== a.popularity) return b.popularity - a.popularity;
+      if (a.src === "eco_tsv" && b.src !== "eco_tsv") return -1;
+      if (b.src === "eco_tsv" && a.src !== "eco_tsv") return 1;
+      if (a.isEcoRoot && !b.isEcoRoot) return -1;
+      if (b.isEcoRoot && !a.isEcoRoot) return 1;
+      return 0;
+    })
+    .slice(0, 20);
+}, [
+  gameState.mode,
+  gameState.game,
+  gameState.moveHistory,
+  clickToMove.selectedSquare,
+  openings,
+]);
+  
   // Calculate openings for selected piece in explore mode
-  const selectedPieceOpenings = useMemo(() => {
+  const selectedPieceOpenings_v0 = useMemo(() => {
     if (gameState.mode !== "explore" || !clickToMove.selectedSquare) {
       return [];
     }
