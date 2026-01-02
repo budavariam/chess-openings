@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { ChessMode } from "../types";
 
 interface ModeSelectorProps {
   mode: ChessMode;
-  setMode: (mode: ChessMode) => void;
   setIsPlayingOpening: (isPlaying: boolean) => void;
   resetGame: () => void;
   logAction: (action: string, details?: any) => void;
@@ -11,16 +11,19 @@ interface ModeSelectorProps {
 
 export function ModeSelector({
   mode,
-  setMode,
   setIsPlayingOpening,
   resetGame,
   logAction,
 }: ModeSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
 
   const handleModeChange = (newMode: ChessMode) => {
     logAction("Mode changed", { from: mode, to: newMode });
-    setMode(newMode);
+
+    // Navigate to the new mode's route
+    navigate(`/${newMode}`);
+
     setIsPlayingOpening(false);
     resetGame();
     setIsExpanded(false);

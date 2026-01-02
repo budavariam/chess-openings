@@ -1,4 +1,5 @@
 import { useMemo, useCallback, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Chess, Square, Move } from "chess.js";
 import { PieceDropHandlerArgs } from "react-chessboard";
 import { toast } from "react-toastify";
@@ -18,6 +19,9 @@ import { useGameState, useSuggestions } from "./hooks/useGameState";
 import { useClickToMove } from "./hooks/useClickToMove";
 
 export default function ChessPractice() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const { openings, fenToOpening, openingMovesIndex } = useOpenings();
   const preferences = usePreferences();
   const {
@@ -28,6 +32,22 @@ export default function ChessPractice() {
     resetGame,
     updateGameState,
   } = useGameState();
+
+  // Sync mode with URL
+  useEffect(() => {
+    const pathToMode: Record<string, ChessMode> = {
+      "/practice": "practice",
+      "/explore": "explore",
+      "/search": "search",
+      "/popular": "popular",
+      "/favourites": "favourites",
+    };
+
+    const modeFromPath = pathToMode[location.pathname];
+    if (modeFromPath && gameState.mode !== modeFromPath) {
+      dispatch({ type: "SET_MODE", payload: modeFromPath });
+    }
+  }, [location.pathname, gameState.mode, dispatch]);
 
   const matchedOpening = useOpeningMatch(
     gameState.moveHistory,
@@ -362,10 +382,6 @@ const selectedPieceOpenings = useMemo(() => {
     dispatch({ type: "SET_SEARCH_QUERY", payload: query });
   }, [dispatch]);
 
-  const handleModeChange = useCallback((mode: ChessMode) => {
-    dispatch({ type: "SET_MODE", payload: mode });
-  }, [dispatch]);
-
   const handleSetIsPlayingOpening = useCallback((isPlaying: boolean) => {
     dispatch({ type: "SET_IS_PLAYING_OPENING", payload: isPlaying });
   }, [dispatch]);
@@ -421,7 +437,6 @@ const selectedPieceOpenings = useMemo(() => {
             </h2>
             <ModeSelector
               mode={gameState.mode}
-              setMode={handleModeChange}
               setIsPlayingOpening={handleSetIsPlayingOpening}
               resetGame={resetGame}
               logAction={() => {}}

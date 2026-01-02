@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import ChessPractice from "./ChessPractice";
 import { Footer } from "./components/Footer";
@@ -50,7 +51,15 @@ export default function App() {
         </div>
       </header>
       <main className="min-w-[320px] p-3 sm:p-6">
-        <ChessPractice />
+        <Routes>
+          <Route path="/" element={<Navigate to="/practice" replace />} />
+          <Route path="/practice" element={<ChessPractice />} />
+          <Route path="/explore" element={<ChessPractice />} />
+          <Route path="/search" element={<ChessPractice />} />
+          <Route path="/popular" element={<ChessPractice />} />
+          <Route path="/favourites" element={<ChessPractice />} />
+          <Route path="*" element={<Navigate to="/practice" replace />} />
+        </Routes>
       </main>
       <Footer />
       <ToastContainer
