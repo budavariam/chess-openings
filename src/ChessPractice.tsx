@@ -390,6 +390,7 @@ const selectedPieceOpenings = useMemo(() => {
         clickToMoveMode={gameState.mode === "explore"}
         selectedSquare={clickToMove.selectedSquare}
         possibleMoves={clickToMove.possibleMoves}
+        captureMoves={clickToMove.captureMoves}
         piecesWithMoves={clickToMove.piecesWithMoves}
       >
         <OpeningControls
@@ -405,6 +406,8 @@ const selectedPieceOpenings = useMemo(() => {
           onThemeChange={preferences.setBoardTheme}
           onCoordinatesToggle={preferences.setShowCoordinates}
           logAction={() => {}}
+          mode={gameState.mode}
+          openingMovesCount={openingMovesIndex.get(gameState.moveHistory.join("|"))?.size || 0}
         />
       </ChessBoard>
 

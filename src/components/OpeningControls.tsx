@@ -17,6 +17,8 @@ interface OpeningControlsProps {
   onThemeChange?: (theme: string) => void;
   onCoordinatesToggle?: (show: boolean) => void;
   logAction: (action: string, details?: any) => void;
+  mode?: string;
+  openingMovesCount?: number;
 }
 
 type NavigationAction = "start" | "back" | "forward" | "end";
@@ -34,6 +36,8 @@ export function OpeningControls({
   onThemeChange,
   onCoordinatesToggle,
   logAction,
+  mode = "practice",
+  openingMovesCount = 0,
 }: OpeningControlsProps) {
   const [showStyleSelector, setShowStyleSelector] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<CSSProperties>(
@@ -163,9 +167,11 @@ export function OpeningControls({
       label: "⏩",
       action: "forward" as NavigationAction,
       disabled:
-        popularMovesIndex >=
-        Math.max(matchedOpening?.moves?.length || 0, gameHistoryLength),
-      title: "Next move",
+        mode === "explore"
+          ? openingMovesCount !== 1
+          : popularMovesIndex >=
+            Math.max(matchedOpening?.moves?.length || 0, gameHistoryLength),
+      title: mode === "explore" ? "Next move (only enabled when one move available)" : "Next move",
       primary: true,
     },
     {

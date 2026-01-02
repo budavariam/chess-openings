@@ -87,6 +87,7 @@ interface ChessBoardProps {
   clickToMoveMode?: boolean;
   selectedSquare?: string | null;
   possibleMoves?: string[];
+  captureMoves?: string[];
   piecesWithMoves?: string[];
 }
 
@@ -102,6 +103,7 @@ export function ChessBoard({
   clickToMoveMode = false,
   selectedSquare = null,
   possibleMoves = [],
+  captureMoves = [],
   piecesWithMoves = [],
 }: ChessBoardProps) {
   const lastMove = getLastMove(game);
@@ -151,12 +153,22 @@ export function ChessBoard({
       };
     });
 
+    // Show larger rings for capture moves (more visible with pieces on top)
+    captureMoves.forEach((square) => {
+      styles[square] = {
+        background:
+          "radial-gradient(circle, transparent 0%, transparent 65%, rgba(0,0,0,.15) 65%, rgba(0,0,0,.15) 80%, transparent 80%)",
+        borderRadius: "50%",
+      };
+    });
+
     return styles;
   }, [
     lastMove,
     currentTheme,
     selectedSquare,
     possibleMoves,
+    captureMoves,
     piecesWithMoves,
     clickToMoveMode,
   ]);

@@ -6,6 +6,7 @@ export interface ClickToMoveState {
   enabled: boolean;
   selectedSquare: string | null;
   possibleMoves: string[];
+  captureMoves: string[];
   piecesWithMoves: string[];
   toggleEnabled: () => void;
   onSquareClick: (square: string) => void;
@@ -58,7 +59,20 @@ export function useClickToMove(
     }) as Move[];
 
     return moves
-      .filter((move) => allOpeningMoves.includes(move.san))
+      .filter((move) => allOpeningMoves.includes(move.san) && !move.captured)
+      .map((move) => move.to);
+  }, [isActive, selectedSquare, game, allOpeningMoves]);
+
+  const captureMoves = useMemo(() => {
+    if (!isActive || !selectedSquare) return [];
+
+    const moves = game.moves({
+      square: selectedSquare as Square,
+      verbose: true,
+    }) as Move[];
+
+    return moves
+      .filter((move) => allOpeningMoves.includes(move.san) && move.captured)
       .map((move) => move.to);
   }, [isActive, selectedSquare, game, allOpeningMoves]);
 
@@ -83,7 +97,7 @@ export function useClickToMove(
 
       const piece = game.get(square as Square);
 
-      if (selectedSquare && possibleMoves.includes(square as Square)) {
+      if (selectedSquare && (possibleMoves.includes(square as Square) || captureMoves.includes(square as Square))) {
         onMove(selectedSquare, square);
         setSelectedSquare(null);
         return;
@@ -104,13 +118,14 @@ export function useClickToMove(
         setSelectedSquare(null);
       }
     },
-    [isActive, selectedSquare, possibleMoves, game, onMove],
+    [isActive, selectedSquare, possibleMoves, captureMoves, game, onMove],
   );
 
   return {
     enabled,
     selectedSquare: isActive ? selectedSquare : null,
     possibleMoves: isActive ? possibleMoves : [],
+    captureMoves: isActive ? captureMoves : [],
     piecesWithMoves: isActive ? piecesWithMoves : [],
     toggleEnabled,
     onSquareClick,
