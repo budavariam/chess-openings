@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Chess, Square, Move } from "chess.js";
-import { toast } from "react-toastify";
+import { useToast } from "./useToast";
 
 export interface ClickToMoveState {
   enabled: boolean;
@@ -21,6 +21,7 @@ export function useClickToMove(
 ): ClickToMoveState {
   const [enabled, setEnabled] = useState(false);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
+  const toast = useToast();
 
   const toggleEnabled = useCallback(() => {
     setEnabled((prev) => !prev);

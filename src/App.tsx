@@ -3,9 +3,11 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import ChessPractice from "./ChessPractice";
 import { Footer } from "./components/Footer";
+import { SettingsModal } from "./components/SettingsModal";
+import { ToastSettingsProvider, useToastSettingsContext } from "./contexts/ToastSettingsContext";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function App() {
+function AppContent() {
   const [dark, setDark] = useState(() => {
     try {
       const saved = localStorage.getItem("theme");
@@ -17,6 +19,13 @@ export default function App() {
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
   });
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const {
+    settings,
+    updateNotificationType,
+    resetToDefaults,
+  } = useToastSettingsContext();
 
   useEffect(() => {
     if (dark) {
@@ -33,6 +42,13 @@ export default function App() {
           Chess Openings Trainer
         </h1>
         <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+            title="Settings"
+          >
+            ⚙️
+          </button>
           <button
             onClick={() => {
               setDark((d) => {
@@ -76,6 +92,21 @@ export default function App() {
         className="!w-auto !max-w-[calc(100vw-1rem)] !min-w-[280px]"
         toastClassName="!text-sm !min-w-[280px]"
       />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={settings}
+        onUpdateNotificationType={updateNotificationType}
+        onReset={resetToDefaults}
+      />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ToastSettingsProvider>
+      <AppContent />
+    </ToastSettingsProvider>
   );
 }

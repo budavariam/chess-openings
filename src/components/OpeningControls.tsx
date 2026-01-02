@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, CSSProperties } from "react";
 import type { Opening } from "../types";
 import type { BoardOrientation } from "../types";
 import { boardThemes } from "../components/ChessBoard";
-import { toast } from "react-toastify";
+import { useToast } from "../hooks/useToast";
 
 interface OpeningControlsProps {
   isPlayingOpening: boolean;
@@ -45,6 +45,7 @@ export function OpeningControls({
   );
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
 
   const handleOrientationChange = (orientation: BoardOrientation) => {
     setBoardOrientation(orientation);

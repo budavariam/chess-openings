@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "./useToast";
 import ecoA from "../eco.json/ecoA.json";
 import ecoB from "../eco.json/ecoB.json";
 import ecoC from "../eco.json/ecoC.json";
@@ -24,6 +24,7 @@ export function useOpenings(): OpeningsData {
     Map<string, Set<string>>
   >(new Map());
   const [isLoaded, setIsLoaded] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (isLoaded) return;

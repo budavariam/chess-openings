@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "../hooks/useToast";
 import { Chess } from "chess.js";
 import type { Opening } from "../types";
 
@@ -74,6 +74,7 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
   popularMovesIndex,
   logAction,
 }) => {
+  const toast = useToast();
   const generateChessComLink = useCallback((moves: string[]): string => {
     if (moves.length === 0) {
       return "https://www.chess.com/analysis";

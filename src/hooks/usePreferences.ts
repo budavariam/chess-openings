@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { useToast } from "./useToast";
 
 export interface Preferences {
   favouriteIds: string[];
@@ -45,6 +45,8 @@ export function usePreferences(): Preferences {
     }
     return true;
   });
+
+  const toast = useToast();
 
   // Save favorites to localStorage
   useEffect(() => {

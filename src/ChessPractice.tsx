@@ -2,7 +2,7 @@ import { useMemo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Chess, Square, Move } from "chess.js";
 import { PieceDropHandlerArgs } from "react-chessboard";
-import { toast } from "react-toastify";
+import { useToast } from "./hooks/useToast";
 import type { Opening, ChessMode, BoardOrientation } from "./types";
 import { ChessBoard } from "./components/ChessBoard";
 import { ModeSelector } from "./components/ModeSelector";
@@ -21,6 +21,7 @@ import { useClickToMove } from "./hooks/useClickToMove";
 export default function ChessPractice() {
   const location = useLocation();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const { openings, fenToOpening, openingMovesIndex } = useOpenings();
   const preferences = usePreferences();

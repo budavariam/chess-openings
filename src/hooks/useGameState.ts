@@ -1,6 +1,6 @@
 import { useReducer, useCallback, useMemo } from "react";
 import { Chess } from "chess.js";
-import { toast } from "react-toastify";
+import { useToast } from "./useToast";
 import type { Opening, ChessMode, BoardOrientation } from "../types";
 
 interface GameState {
@@ -106,6 +106,8 @@ export function useGameState() {
     searchResults: [],
     boardOrientation: "white" as BoardOrientation,
   });
+
+  const toast = useToast();
 
   const updateGameState = useCallback((game: Chess, safeIndex?: number) => {
     const moveHistory = [...game.history()];
