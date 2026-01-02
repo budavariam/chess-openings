@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act } from '../test/test-utils';
 import { useGameState } from './useGameState';
 import type { Opening } from '../types';
 
