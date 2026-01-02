@@ -23,6 +23,7 @@ function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const {
     settings,
+    updateSettings,
     updateNotificationType,
     resetToDefaults,
   } = useToastSettingsContext();
@@ -79,15 +80,15 @@ function AppContent() {
       </main>
       <Footer />
       <ToastContainer
-        position="bottom-right"
+        position={settings.position}
         autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
+        hideProgressBar={!settings.showProgressBar}
+        newestOnTop={settings.newestOnTop}
+        closeOnClick={settings.closeOnClick}
         rtl={false}
         pauseOnFocusLoss
         draggable
-        pauseOnHover
+        pauseOnHover={settings.pauseOnHover}
         theme={dark ? "dark" : "light"}
         className="!w-auto !max-w-[calc(100vw-1rem)] !min-w-[280px]"
         toastClassName="!text-sm !min-w-[280px]"
@@ -97,6 +98,7 @@ function AppContent() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdateNotificationType={updateNotificationType}
+        onUpdateSettings={updateSettings}
         onReset={resetToDefaults}
       />
     </div>

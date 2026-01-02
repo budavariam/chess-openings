@@ -6,7 +6,15 @@
  * - PATCH: Bug fixes or value adjustments
  */
 
-export const TOAST_SETTINGS_VERSION = "1.0.0";
+export const TOAST_SETTINGS_VERSION = "1.1.0";
+
+export type ToastPosition =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
 
 export interface ToastNotificationSettings {
   enabled: boolean;
@@ -18,6 +26,12 @@ export interface ToastSettings {
   success: ToastNotificationSettings;
   error: ToastNotificationSettings;
   info: ToastNotificationSettings;
+  // General toast behavior settings
+  position: ToastPosition;
+  showProgressBar: boolean;
+  pauseOnHover: boolean;
+  closeOnClick: boolean;
+  newestOnTop: boolean;
 }
 
 export const DEFAULT_TOAST_SETTINGS: ToastSettings = {
@@ -34,6 +48,11 @@ export const DEFAULT_TOAST_SETTINGS: ToastSettings = {
     enabled: true,
     duration: 3000,
   },
+  position: "bottom-right",
+  showProgressBar: true,
+  pauseOnHover: true,
+  closeOnClick: true,
+  newestOnTop: false,
 };
 
 /**
@@ -99,5 +118,11 @@ function validateToastSettings(
       enabled: settings.info?.enabled ?? DEFAULT_TOAST_SETTINGS.info.enabled,
       duration: settings.info?.duration ?? DEFAULT_TOAST_SETTINGS.info.duration,
     },
+    position: settings.position ?? DEFAULT_TOAST_SETTINGS.position,
+    showProgressBar:
+      settings.showProgressBar ?? DEFAULT_TOAST_SETTINGS.showProgressBar,
+    pauseOnHover: settings.pauseOnHover ?? DEFAULT_TOAST_SETTINGS.pauseOnHover,
+    closeOnClick: settings.closeOnClick ?? DEFAULT_TOAST_SETTINGS.closeOnClick,
+    newestOnTop: settings.newestOnTop ?? DEFAULT_TOAST_SETTINGS.newestOnTop,
   };
 }

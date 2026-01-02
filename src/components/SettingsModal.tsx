@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ToastSettings } from "../types/toastSettings";
+import type { ToastSettings, ToastPosition } from "../types/toastSettings";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -9,6 +9,7 @@ interface SettingsModalProps {
     type: "success" | "error" | "info",
     updates: Partial<ToastSettings[typeof type]>
   ) => void;
+  onUpdateSettings: (updates: Partial<ToastSettings>) => void;
   onReset: () => void;
 }
 
@@ -17,6 +18,7 @@ export function SettingsModal({
   onClose,
   settings,
   onUpdateNotificationType,
+  onUpdateSettings,
   onReset,
 }: SettingsModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -165,6 +167,149 @@ export function SettingsModal({
                 </div>
               </div>
             ))}
+
+            {/* General Behavior Settings */}
+            <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                General Behavior
+              </h3>
+
+              {/* Position */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Position
+                </label>
+                <select
+                  value={settings.position}
+                  onChange={(e) =>
+                    onUpdateSettings({ position: e.target.value as ToastPosition })
+                  }
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="top-left">Top Left</option>
+                  <option value="top-center">Top Center</option>
+                  <option value="top-right">Top Right</option>
+                  <option value="bottom-left">Bottom Left</option>
+                  <option value="bottom-center">Bottom Center</option>
+                  <option value="bottom-right">Bottom Right</option>
+                </select>
+              </div>
+
+              {/* Toggle Options */}
+              <div className="space-y-3">
+                {/* Show Progress Bar */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Show Progress Bar
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Display countdown timer
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      onUpdateSettings({ showProgressBar: !settings.showProgressBar })
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      settings.showProgressBar
+                        ? "bg-blue-600"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        settings.showProgressBar ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Pause on Hover */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Pause on Hover
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Pause auto-close when hovering
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      onUpdateSettings({ pauseOnHover: !settings.pauseOnHover })
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      settings.pauseOnHover
+                        ? "bg-blue-600"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        settings.pauseOnHover ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Close on Click */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Close on Click
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Click notification to dismiss
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      onUpdateSettings({ closeOnClick: !settings.closeOnClick })
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      settings.closeOnClick
+                        ? "bg-blue-600"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        settings.closeOnClick ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Newest on Top */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Newest on Top
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Show new notifications above older ones
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      onUpdateSettings({ newestOnTop: !settings.newestOnTop })
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      settings.newestOnTop
+                        ? "bg-blue-600"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        settings.newestOnTop ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {/* Version Info */}
             <div className="text-xs text-gray-400 dark:text-gray-500 text-center">
