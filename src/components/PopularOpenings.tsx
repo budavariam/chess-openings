@@ -12,6 +12,7 @@ interface OpeningsListProps {
   favouriteIds: string[];
   mode?: ChessMode;
   maxItems?: number;
+  onMoveClick?: (opening: Opening, moveIndex: number) => void;
 }
 
 export const OpeningsList: React.FC<OpeningsListProps> = ({
@@ -24,6 +25,7 @@ export const OpeningsList: React.FC<OpeningsListProps> = ({
   favouriteIds,
   mode = "popular",
   maxItems = 20,
+  onMoveClick,
 }) => {
   const handleStudyOpening = (opening: Opening, startAtFinalPosition?: boolean) => {
     const index = openings.findIndex(
@@ -60,6 +62,7 @@ export const OpeningsList: React.FC<OpeningsListProps> = ({
               variant="list"
               mode={mode}
               showIndex={index + 1}
+              onMoveClick={onMoveClick}
             />
           );
         })}
@@ -80,6 +83,7 @@ interface PopularOpeningsProps {
   toggleFavourite: (openingId: string) => void;
   favouriteIds: string[];
   mode?: ChessMode;
+  onMoveClick?: (opening: Opening, moveIndex: number) => void;
 }
 
 export const PopularOpenings: React.FC<PopularOpeningsProps> = (props) => {

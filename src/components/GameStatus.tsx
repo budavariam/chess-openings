@@ -1,6 +1,6 @@
 import { ExternalExplorer } from "./ExternalExplorer";
 import { OpeningItem, getOpeningId } from "./OpeningItem";
-import { formatMovesAsChessNotation } from "../utils/chessUtils";
+import { InteractiveMovesDisplay } from "./InteractiveMovesDisplay";
 import type { Opening, ChessMode } from "../types";
 
 interface GameStatusProps {
@@ -14,6 +14,7 @@ interface GameStatusProps {
   favouriteIds?: string[];
   mode: ChessMode;
   logAction: (action: string, details?: any) => void;
+  onMoveClick?: (moveIndex: number) => void;
 }
 
 export function GameStatus({
@@ -27,6 +28,7 @@ export function GameStatus({
   favouriteIds = [],
   mode = "practice",
   logAction,
+  onMoveClick,
 }: GameStatusProps) {
   const currentOpeningProgress = matchedOpening
     ? `${popularMovesIndex}/${matchedOpening.moves.length}`
@@ -71,6 +73,7 @@ export function GameStatus({
                   variant="expanded"
                   mode={mode}
                   className="!p-3"
+                  onMoveClick={onMoveClick ? (_, index) => onMoveClick(index) : undefined}
                 />
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
                   <ExternalExplorer
@@ -91,7 +94,10 @@ export function GameStatus({
             Move History
           </h3>
           <div className="text-sm text-gray-400 break-words font-mono">
-            {moveHistory.length > 0 ? formatMovesAsChessNotation(moveHistory) : "—"}
+            <InteractiveMovesDisplay
+              moves={moveHistory}
+              onMoveClick={onMoveClick}
+            />
           </div>
           <div className="text-xs text-gray-500 mt-1">
             {openingsCount} openings loaded

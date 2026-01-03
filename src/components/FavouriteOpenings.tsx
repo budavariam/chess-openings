@@ -8,6 +8,7 @@ interface FavouriteOpeningsProps {
   toggleFavourite: (openingId: string) => void;
   favouriteIds: string[];
   mode?: ChessMode;
+  onMoveClick?: (opening: Opening, moveIndex: number) => void;
 }
 
 export const FavouriteOpenings: React.FC<FavouriteOpeningsProps> = ({
@@ -16,6 +17,7 @@ export const FavouriteOpenings: React.FC<FavouriteOpeningsProps> = ({
   toggleFavourite,
   favouriteIds,
   mode = "favourites",
+  onMoveClick,
 }) => {
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
@@ -43,6 +45,7 @@ export const FavouriteOpenings: React.FC<FavouriteOpeningsProps> = ({
                 onStudy={startSearchResult}
                 variant="expanded"
                 mode={mode}
+                onMoveClick={onMoveClick}
               />
             );
           })}

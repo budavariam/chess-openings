@@ -484,6 +484,7 @@ const selectedPieceOpenings = useMemo(() => {
             toggleFavourite={preferences.toggleFavourite}
             favouriteIds={preferences.favouriteIds}
             mode={gameState.mode}
+            onMoveClick={(index) => navigateToMove(index, popularSorted)}
           />
         </div>
 
@@ -496,6 +497,34 @@ const selectedPieceOpenings = useMemo(() => {
             toggleFavourite={preferences.toggleFavourite}
             favouriteIds={preferences.favouriteIds}
             mode={gameState.mode}
+            onMoveClick={(opening, moveIndex) => {
+              // Start the opening at the clicked position
+              resetGame();
+              const g = new Chess();
+
+              // Play moves up to the clicked position
+              for (let i = 0; i < moveIndex && i < opening.moves.length; i++) {
+                const move = g.move(opening.moves[i]);
+                if (!move) {
+                  console.error("Failed to apply move:", {
+                    moveIndex: i,
+                    move: opening.moves[i],
+                  });
+                  break;
+                }
+              }
+
+              dispatch({ type: "SET_MATCHED_OPENING", payload: opening });
+              dispatch({ type: "SET_IS_PLAYING_OPENING", payload: true });
+              dispatch({ type: "SET_MODE", payload: "popular" });
+
+              const index = popularSorted.findIndex((o) => o.fen === opening.fen);
+              dispatch({ type: "SET_POPULAR_INDEX", payload: Math.max(0, index) });
+
+              updateGameState(g, moveIndex);
+
+              toast.success(`Jumped to move ${moveIndex} in ${opening.name}`);
+            }}
           />
         )}
 
@@ -510,6 +539,40 @@ const selectedPieceOpenings = useMemo(() => {
             favouriteIds={preferences.favouriteIds}
             mode={gameState.mode}
             maxItems={15}
+            onMoveClick={(opening, moveIndex) => {
+              // Find the opening index
+              const openingIndex = selectedPieceOpenings.findIndex(
+                (o) => getOpeningId(o) === getOpeningId(opening)
+              );
+              if (openingIndex !== -1) {
+                // Start the opening first
+                resetGame();
+                const g = new Chess();
+
+                // Play moves up to the clicked position
+                for (let i = 0; i < moveIndex && i < opening.moves.length; i++) {
+                  const move = g.move(opening.moves[i]);
+                  if (!move) {
+                    console.error("Failed to apply move:", {
+                      moveIndex: i,
+                      move: opening.moves[i],
+                    });
+                    break;
+                  }
+                }
+
+                const popularIndex = popularSorted.findIndex(
+                  (o) => getOpeningId(o) === getOpeningId(opening)
+                );
+                dispatch({ type: "SET_POPULAR_INDEX", payload: Math.max(0, popularIndex) });
+                dispatch({ type: "SET_MATCHED_OPENING", payload: opening });
+                dispatch({ type: "SET_IS_PLAYING_OPENING", payload: true });
+                dispatch({ type: "SET_MODE", payload: "popular" });
+                updateGameState(g, moveIndex);
+
+                toast.success(`Jumped to move ${moveIndex} in ${opening.name}`);
+              }
+            }}
           />
         )}
 
@@ -521,6 +584,37 @@ const selectedPieceOpenings = useMemo(() => {
             toggleFavourite={preferences.toggleFavourite}
             favouriteIds={preferences.favouriteIds}
             mode={gameState.mode}
+            onMoveClick={(opening, moveIndex) => {
+              // Find the opening index in popularSorted
+              const openingIndex = popularSorted.findIndex(
+                (o) => getOpeningId(o) === getOpeningId(opening)
+              );
+              if (openingIndex !== -1) {
+                // Start the opening first
+                resetGame();
+                const g = new Chess();
+
+                // Play moves up to the clicked position
+                for (let i = 0; i < moveIndex && i < opening.moves.length; i++) {
+                  const move = g.move(opening.moves[i]);
+                  if (!move) {
+                    console.error("Failed to apply move:", {
+                      moveIndex: i,
+                      move: opening.moves[i],
+                    });
+                    break;
+                  }
+                }
+
+                dispatch({ type: "SET_POPULAR_INDEX", payload: openingIndex });
+                dispatch({ type: "SET_MATCHED_OPENING", payload: opening });
+                dispatch({ type: "SET_IS_PLAYING_OPENING", payload: true });
+                dispatch({ type: "SET_MODE", payload: "popular" });
+                updateGameState(g, moveIndex);
+
+                toast.success(`Jumped to move ${moveIndex} in ${opening.name}`);
+              }
+            }}
           />
         )}
 
@@ -531,6 +625,34 @@ const selectedPieceOpenings = useMemo(() => {
             toggleFavourite={preferences.toggleFavourite}
             favouriteIds={preferences.favouriteIds}
             mode={gameState.mode}
+            onMoveClick={(opening, moveIndex) => {
+              // Start the opening at the clicked position
+              resetGame();
+              const g = new Chess();
+
+              // Play moves up to the clicked position
+              for (let i = 0; i < moveIndex && i < opening.moves.length; i++) {
+                const move = g.move(opening.moves[i]);
+                if (!move) {
+                  console.error("Failed to apply move:", {
+                    moveIndex: i,
+                    move: opening.moves[i],
+                  });
+                  break;
+                }
+              }
+
+              dispatch({ type: "SET_MATCHED_OPENING", payload: opening });
+              dispatch({ type: "SET_IS_PLAYING_OPENING", payload: true });
+              dispatch({ type: "SET_MODE", payload: "popular" });
+
+              const index = popularSorted.findIndex((o) => o.fen === opening.fen);
+              dispatch({ type: "SET_POPULAR_INDEX", payload: Math.max(0, index) });
+
+              updateGameState(g, moveIndex);
+
+              toast.success(`Jumped to move ${moveIndex} in ${opening.name}`);
+            }}
           />
         )}
       </div>

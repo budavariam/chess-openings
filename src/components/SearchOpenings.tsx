@@ -10,6 +10,7 @@ interface SearchOpeningsProps {
   toggleFavourite: (openingId: string) => void;
   favouriteIds: string[];
   mode?: ChessMode;
+  onMoveClick?: (opening: Opening, moveIndex: number) => void;
 }
 
 export function SearchOpenings({
@@ -20,6 +21,7 @@ export function SearchOpenings({
   toggleFavourite,
   favouriteIds,
   mode = "search",
+  onMoveClick,
 }: SearchOpeningsProps) {
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
@@ -50,6 +52,7 @@ export function SearchOpenings({
                 onStudy={startSearchResult}
                 variant="list"
                 mode={mode}
+                onMoveClick={onMoveClick}
               />
             );
           })}

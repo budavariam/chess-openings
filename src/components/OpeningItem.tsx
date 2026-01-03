@@ -1,6 +1,6 @@
 
 import type { Opening, ChessMode } from "../types";
-import { formatMovesAsChessNotation } from "../utils/chessUtils";
+import { InteractiveMovesDisplay } from "./InteractiveMovesDisplay";
 
 interface OpeningItemProps {
   opening: Opening;
@@ -11,6 +11,7 @@ interface OpeningItemProps {
   mode?: ChessMode;
   showIndex?: number;
   className?: string;
+  onMoveClick?: (opening: Opening, moveIndex: number) => void;
 }
 
 // STANDARDIZED ID FUNCTION - use this everywhere!
@@ -26,6 +27,7 @@ export function OpeningItem({
   mode = "practice",
   showIndex,
   className = "",
+  onMoveClick,
 }: OpeningItemProps) {
   const openingId = getOpeningId(opening);
   const shouldShowStudyButton =
@@ -115,13 +117,11 @@ export function OpeningItem({
 
         {/* Move sequence */}
         <div className="text-sm text-gray-600 dark:text-gray-400 font-mono leading-relaxed">
-          {formatMovesAsChessNotation(opening.moves, 16)}
-          {opening.moves.length > 16 && (
-            <span className="text-gray-400">
-              {" "}
-              ... +{opening.moves.length - 16} more
-            </span>
-          )}
+          <InteractiveMovesDisplay
+            moves={opening.moves}
+            maxMoves={16}
+            onMoveClick={onMoveClick ? (index) => onMoveClick(opening, index) : undefined}
+          />
         </div>
 
         {/* Move count */}
@@ -174,8 +174,11 @@ export function OpeningItem({
       {/* Moves display */}
       <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
         <span className="font-mono">
-          {formatMovesAsChessNotation(opening.moves, 12)}
-          {opening.moves.length > 12 && " ..."}
+          <InteractiveMovesDisplay
+            moves={opening.moves}
+            maxMoves={12}
+            onMoveClick={onMoveClick ? (index) => onMoveClick(opening, index) : undefined}
+          />
         </span>
         <span className="ml-2 text-xs">{opening.moves.length} moves</span>
       </div>
