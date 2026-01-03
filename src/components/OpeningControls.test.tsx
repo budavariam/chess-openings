@@ -188,7 +188,7 @@ describe('OpeningControls - Navigation Buttons', () => {
   it('should show debug info in development mode', () => {
     // Set DEV mode
     const originalEnv = import.meta.env.DEV;
-    (import.meta.env as any).DEV = true;
+    (import.meta.env as { DEV: boolean }).DEV = true;
 
     render(<OpeningControls {...defaultProps} />);
 
@@ -197,6 +197,6 @@ describe('OpeningControls - Navigation Buttons', () => {
     expect(debugSection).toBeTruthy();
 
     // Restore
-    (import.meta.env as any).DEV = originalEnv;
+    (import.meta.env as { DEV: boolean }).DEV = originalEnv;
   });
 });

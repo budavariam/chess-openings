@@ -161,12 +161,13 @@ export function useGameState() {
           toast.error(`Invalid move: ${moveStr}`);
           return false;
         }
-      } catch (error: any) {
-        toast.error(`Move failed: ${error.message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(`Move failed: ${message}`);
         return false;
       }
     },
-    [state.game, state.isPlayingOpening, state.moveHistory],
+    [state.game, state.isPlayingOpening, state.moveHistory, toast],
   );
 
   const navigateToMove = useCallback(
@@ -261,9 +262,10 @@ export function useGameState() {
         }
 
         toast.error("No moves to navigate");
-      } catch (error: any) {
-        console.error("[Navigation] Error:", error.message);
-        toast.error(`Navigation failed: ${error.message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("[Navigation] Error:", message);
+        toast.error(`Navigation failed: ${message}`);
       }
     },
     [
@@ -271,8 +273,10 @@ export function useGameState() {
       state.matchedOpening,
       state.moveHistory,
       state.popularIndex,
+      state.popularMovesIndex,
       state.mode,
       updateGameState,
+      toast,
     ],
   );
 
@@ -280,10 +284,11 @@ export function useGameState() {
     try {
       dispatch({ type: "RESET_GAME" });
       toast.success("Game reset");
-    } catch (error: any) {
-      toast.error(`Reset failed: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Reset failed: ${message}`);
     }
-  }, []);
+  }, [toast]);
 
   return {
     state,

@@ -55,8 +55,9 @@ export function usePreferences(): Preferences {
         "chess-opening-favourites",
         JSON.stringify(favouriteIds),
       );
-    } catch (error: any) {
-      console.error("Failed to save favorites:", error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Failed to save favorites:", message);
     }
   }, [favouriteIds]);
 
@@ -64,8 +65,9 @@ export function usePreferences(): Preferences {
   useEffect(() => {
     try {
       localStorage.setItem("chess-board-theme", boardTheme);
-    } catch (error: any) {
-      console.error("Failed to save board theme:", error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Failed to save board theme:", message);
     }
   }, [boardTheme]);
 
@@ -73,8 +75,9 @@ export function usePreferences(): Preferences {
   useEffect(() => {
     try {
       localStorage.setItem("chess-show-coordinates", String(showCoordinates));
-    } catch (error: any) {
-      console.error("Failed to save coordinates preference:", error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("Failed to save coordinates preference:", message);
     }
   }, [showCoordinates]);
 
@@ -88,8 +91,9 @@ export function usePreferences(): Preferences {
         setFavouriteIds([...favouriteIds, openingId]);
         toast.success("Added to favorites");
       }
-    } catch (error: any) {
-      toast.error(`Failed to toggle favorite: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to toggle favorite: ${message}`);
     }
   };
 
@@ -97,8 +101,9 @@ export function usePreferences(): Preferences {
     try {
       setBoardThemeState(theme);
       toast.success(`Changed board theme to ${theme}`);
-    } catch (error: any) {
-      toast.error(`Failed to change theme: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to change theme: ${message}`);
     }
   };
 
@@ -106,8 +111,9 @@ export function usePreferences(): Preferences {
     try {
       setShowCoordinatesState(show);
       toast.success(`${show ? "Enabled" : "Disabled"} board coordinates`);
-    } catch (error: any) {
-      toast.error(`Failed to toggle coordinates: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to toggle coordinates: ${message}`);
     }
   };
 

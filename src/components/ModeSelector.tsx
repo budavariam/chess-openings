@@ -6,7 +6,7 @@ interface ModeSelectorProps {
   mode: ChessMode;
   setIsPlayingOpening: (isPlaying: boolean) => void;
   resetGame: () => void;
-  logAction: (action: string, details?: any) => void;
+  logAction: (action: string, details?: Record<string, unknown>) => void;
 }
 
 export function ModeSelector({

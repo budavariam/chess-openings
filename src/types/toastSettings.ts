@@ -55,18 +55,19 @@ export const DEFAULT_TOAST_SETTINGS: ToastSettings = {
 };
 
 export function migrateToastSettings(
-  savedSettings: any
+  savedSettings: unknown
 ): ToastSettings {
   if (!savedSettings || typeof savedSettings !== "object") {
     return DEFAULT_TOAST_SETTINGS;
   }
 
-  const savedVersion = savedSettings.version || "0.0.0";
+  const settings = savedSettings as Partial<ToastSettings> & { version?: string };
+  const savedVersion = settings.version || "0.0.0";
   const [savedMajor] = savedVersion.split(".").map(Number);
   const [currentMajor] = TOAST_SETTINGS_VERSION.split(".").map(Number);
 
   if (savedVersion === TOAST_SETTINGS_VERSION) {
-    return validateToastSettings(savedSettings);
+    return validateToastSettings(settings);
   }
 
   if (savedMajor !== currentMajor) {
@@ -76,7 +77,7 @@ export function migrateToastSettings(
     return DEFAULT_TOAST_SETTINGS;
   }
 
-  return validateToastSettings(savedSettings);
+  return validateToastSettings(settings);
 }
 
 function validateToastSettings(

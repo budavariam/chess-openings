@@ -4,3 +4,5 @@ node_modules/
 .claude/settings.local.json
 *storybook.log
 storybook-static
+
+.eslintcache

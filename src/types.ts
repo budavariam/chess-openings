@@ -1,3 +1,5 @@
+import type { Chess } from "chess.js";
+
 export type Opening = {
   name: string;
   eco?: string;
@@ -15,7 +17,7 @@ export type ChessMode = "practice" | "explore" | "popular" | "search" | "favouri
 export type BoardOrientation = "white" | "black";
 
 export interface ChessGameState {
-  game: any; // Chess instance
+  game: Chess;
   moveHistory: string[];
   matchedOpening: Opening | null;
   isPlayingOpening: boolean;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '../test/test-utils';
+import { renderHook } from '../test/test-utils';
 import { Chess } from 'chess.js';
 import { useClickToMove } from './useClickToMove';
 import { useOpenings } from './useOpenings';

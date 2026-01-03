@@ -5,6 +5,7 @@ import {
   PieceDropHandlerArgs,
   SquareHandlerArgs,
 } from "react-chessboard";
+import { Chess } from "chess.js";
 import { getLastMove } from "../utils/chessUtils";
 import type { BoardOrientation } from "../types";
 
@@ -80,7 +81,7 @@ interface ChessBoardProps {
   boardOrientation: BoardOrientation;
   onPieceDrop: (args: PieceDropHandlerArgs) => boolean;
   onSquareClick?: (square: string) => void;
-  game: any;
+  game: Chess;
   children: React.ReactNode;
   showCoordinates?: boolean;
   boardTheme?: string;

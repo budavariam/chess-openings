@@ -1,6 +1,11 @@
-import { Chess } from "chess.js";
+import { Chess, Move } from "chess.js";
 
-export function calculatePopularity(data: any): number {
+interface OpeningData {
+  src?: string;
+  isEcoRoot?: boolean;
+}
+
+export function calculatePopularity(data: OpeningData): number {
   if (data.src === "eco_tsv") return 100; // Lichess data is most authoritative
   if (data.isEcoRoot) return 95; // Root variations are important
   if (data.src === "eco_js") return 80;
@@ -46,7 +51,7 @@ export function formatMovesAsChessNotation(moves: string[], maxMoves?: number): 
 }
 
 // Get last move for highlighting
-export function getLastMove(game: any): { from: string; to: string } | null {
+export function getLastMove(game: Chess): { from: string; to: string } | null {
   const history = game.history({ verbose: true });
   if (history.length === 0) return null;
 
@@ -58,15 +63,15 @@ export function getLastMove(game: any): { from: string; to: string } | null {
 }
 
 // Create a new chess game instance
-export function createChessGame(): any {
+export function createChessGame(): Chess {
   return new Chess();
 }
 
 // Make a move on the chess game
 export function makeChessMove(
-  game: any,
+  game: Chess,
   move: string | { from: string; to: string; promotion?: string },
-): any | null {
+): Move | null {
   try {
     return game.move(move);
   } catch {
@@ -75,7 +80,7 @@ export function makeChessMove(
 }
 
 // Undo last move
-export function undoMove(game: any): any | null {
+export function undoMove(game: Chess): Move | null {
   try {
     return game.undo();
   } catch {

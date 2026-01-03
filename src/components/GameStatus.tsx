@@ -13,7 +13,7 @@ interface GameStatusProps {
   toggleFavourite: (openingId: string) => void;
   favouriteIds?: string[];
   mode: ChessMode;
-  logAction: (action: string, details?: any) => void;
+  logAction: (action: string, details?: Record<string, unknown>) => void;
   onMoveClick?: (moveIndex: number) => void;
 }
 

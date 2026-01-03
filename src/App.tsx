@@ -18,7 +18,7 @@ export default function App() {
         return saved === "dark";
       }
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
-    } catch (e) {
+    } catch {
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
   });
@@ -70,7 +70,9 @@ export default function App() {
                 const next = !d;
                 try {
                   localStorage.setItem("theme", next ? "dark" : "light");
-                } catch (e) {}
+                } catch {
+                  // Ignore localStorage errors
+                }
                 return next;
               });
             }}

@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import eslint from '@nabla/vite-plugin-eslint';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
@@ -12,7 +13,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 export default defineConfig({
   base: './',
   // Keep the trailing slash
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), eslint()],
   test: {
     globals: true,
     environment: 'jsdom',

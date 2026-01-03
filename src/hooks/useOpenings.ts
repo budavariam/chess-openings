@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useReducer, useEffect, useMemo } from "react";
 import { useToast } from "./useToast";
 import ecoA from "../eco.json/ecoA.json";
 import ecoB from "../eco.json/ecoB.json";
@@ -15,19 +15,54 @@ export interface OpeningsData {
   isLoaded: boolean;
 }
 
+interface OpeningsState {
+  openings: Opening[];
+  fenToOpening: Map<string, Opening>;
+  openingMovesIndex: Map<string, Set<string>>;
+  isLoaded: boolean;
+}
+
+type OpeningsAction =
+  | {
+      type: "LOAD_SUCCESS";
+      payload: {
+        openings: Opening[];
+        fenToOpening: Map<string, Opening>;
+        openingMovesIndex: Map<string, Set<string>>;
+      };
+    };
+
+const initialState: OpeningsState = {
+  openings: [],
+  fenToOpening: new Map(),
+  openingMovesIndex: new Map(),
+  isLoaded: false,
+};
+
+function openingsReducer(
+  state: OpeningsState,
+  action: OpeningsAction
+): OpeningsState {
+  switch (action.type) {
+    case "LOAD_SUCCESS":
+      return {
+        ...state,
+        openings: action.payload.openings,
+        fenToOpening: action.payload.fenToOpening,
+        openingMovesIndex: action.payload.openingMovesIndex,
+        isLoaded: true,
+      };
+    default:
+      return state;
+  }
+}
+
 export function useOpenings(): OpeningsData {
-  const [openings, setOpenings] = useState<Opening[]>([]);
-  const [fenToOpening, setFenToOpening] = useState<Map<string, Opening>>(
-    new Map(),
-  );
-  const [openingMovesIndex, setOpeningMovesIndex] = useState<
-    Map<string, Set<string>>
-  >(new Map());
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [state, dispatch] = useReducer(openingsReducer, initialState);
   const toast = useToast();
 
   useEffect(() => {
-    if (isLoaded) return;
+    if (state.isLoaded) return;
 
     console.log("[Openings] Loading ECO data...");
     try {
@@ -37,7 +72,7 @@ export function useOpenings(): OpeningsData {
       const fenMap = new Map<string, Opening>();
       const movesIndex = new Map<string, Set<string>>();
 
-      Object.entries(allEcoData as Record<string, any>).forEach(
+      Object.entries(allEcoData as Record<string, { name?: string; eco: string; moves?: string; src?: string; scid?: string; isEcoRoot?: boolean; aliases?: Record<string, string> }>).forEach(
         ([fen, data]) => {
           const movesArray = parseMovesString(data.moves || "");
           if (movesArray.length > 0) {
@@ -83,23 +118,28 @@ export function useOpenings(): OpeningsData {
         firstMoves: Array.from(firstMoves).length,
       });
 
-      setOpenings(mapped);
-      setFenToOpening(fenMap);
-      setOpeningMovesIndex(movesIndex);
-      setIsLoaded(true);
+      dispatch({
+        type: "LOAD_SUCCESS",
+        payload: {
+          openings: mapped,
+          fenToOpening: fenMap,
+          openingMovesIndex: movesIndex,
+        },
+      });
 
       toast.success(`Loaded ${mapped.length} chess openings`);
-    } catch (error: any) {
-      console.error("[Openings] Error loading:", error.message);
-      toast.error(`Failed to load openings: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[Openings] Error loading:", message);
+      toast.error(`Failed to load openings: ${message}`);
     }
-  }, [isLoaded]);
+  }, [state.isLoaded, toast]);
 
   return {
-    openings,
-    fenToOpening,
-    openingMovesIndex,
-    isLoaded,
+    openings: state.openings,
+    fenToOpening: state.fenToOpening,
+    openingMovesIndex: state.openingMovesIndex,
+    isLoaded: state.isLoaded,
   };
 }
 

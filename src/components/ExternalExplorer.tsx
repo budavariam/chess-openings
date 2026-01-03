@@ -6,7 +6,7 @@ import type { Opening } from "../types";
 interface ExternalExplorerProps {
   matchedOpening: Opening | null;
   popularMovesIndex: number;
-  logAction: (action: string, details?: any) => void;
+  logAction: (action: string, details?: Record<string, unknown>) => void;
 }
 
 // Reusable button component with text overflow protection
@@ -99,7 +99,7 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
       let url: string;
 
       switch (site) {
-        case "lichess":
+        case "lichess": {
           const moveText = moves.join(" ");
           navigator.clipboard
             ?.writeText(moveText)
@@ -111,11 +111,12 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
             });
           url = "https://lichess.org/analysis";
           break;
+        }
         case "chess.com":
           url = generateChessComLink(moves);
           toast.info(`Opening ${matchedOpening.name} in Chess.com`);
           break;
-        case "365chess":
+        case "365chess": {
           url = "https://www.365chess.com/opening.php";
           const moveText365 = moves.join(" ");
           navigator.clipboard
@@ -129,6 +130,7 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
               toast.info(`Search for: ${moveText365} on 365chess`);
             });
           break;
+        }
         default:
           url = "https://lichess.org/analysis";
       }
@@ -141,7 +143,7 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
         moves: moves.join(" "),
       });
     },
-    [matchedOpening, popularMovesIndex, generateChessComLink, logAction],
+    [matchedOpening, popularMovesIndex, generateChessComLink, logAction, toast],
   );
 
   const exportData = useCallback(
@@ -158,7 +160,7 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
 
       try {
         switch (format) {
-          case "san":
+          case "san": {
             const sanMoves = moves.join(" ");
             navigator.clipboard
               ?.writeText(sanMoves)
@@ -175,8 +177,9 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
               moves: sanMoves,
             });
             break;
+          }
 
-          case "fen":
+          case "fen": {
             const game = new Chess();
             for (const move of moves) {
               const result = game.move(move);
@@ -202,8 +205,9 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
               fen: fen,
             });
             break;
+          }
 
-          case "pgn":
+          case "pgn": {
             const gameForPgn = new Chess();
             for (const move of moves) {
               const result = gameForPgn.move(move);
@@ -242,8 +246,9 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
               eco: matchedOpening.eco,
             });
             break;
+          }
 
-          case "uci":
+          case "uci": {
             const gameForUci = new Chess();
             const uciMoves: string[] = [];
 
@@ -274,14 +279,15 @@ export const ExternalExplorer: React.FC<ExternalExplorerProps> = ({
               uci: uciString,
             });
             break;
+          }
         }
-      } catch (error: any) {
-        const errorMessage = error?.message || String(error);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         toast.error(`Export failed: ${errorMessage}`);
         logAction("ERROR: Export failed", { format, error: errorMessage });
       }
     },
-    [matchedOpening, popularMovesIndex, logAction],
+    [matchedOpening, popularMovesIndex, logAction, toast],
   );
 
   if (!matchedOpening) {

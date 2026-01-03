@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Chess, Square, Move } from "chess.js";
 import { PieceDropHandlerArgs } from "react-chessboard";
 import { useToast } from "./hooks/useToast";
@@ -20,7 +20,6 @@ import { useClickToMove } from "./hooks/useClickToMove";
 
 export default function ChessPractice() {
   const location = useLocation();
-  const navigate = useNavigate();
   const toast = useToast();
 
   const { openings, fenToOpening, openingMovesIndex } = useOpenings();
@@ -153,12 +152,13 @@ export default function ChessPractice() {
           toast.info("Exited opening study mode");
         }
         return true;
-      } catch (error: any) {
-        toast.error(`Invalid move: ${error.message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(`Invalid move: ${message}`);
         return false;
       }
     },
-    [gameState.game, gameState.isPlayingOpening, gameState.moveHistory, dispatch],
+    [gameState.game, gameState.isPlayingOpening, gameState.moveHistory, dispatch, toast],
   );
 
   const searchResults = useMemo(() => {
@@ -215,12 +215,6 @@ const selectedPieceOpenings = useMemo(() => {
     return [];
   }
 
-  // Get legal moves from selected piece (already have this)
-  const moves = gameState.game.moves({
-    square: clickToMove.selectedSquare as Square,
-    verbose: true,
-  }) as Move[];
-
   // Create a map of SAN -> from square for ALL legal moves in current position
   // Only ONE Chess instance created here!
   const sanToFromMap = new Map<string, string>();
@@ -266,55 +260,6 @@ const selectedPieceOpenings = useMemo(() => {
   clickToMove.selectedSquare,
   openings,
 ]);
-  
-  // Calculate openings for selected piece in explore mode
-  const selectedPieceOpenings_v0 = useMemo(() => {
-    if (gameState.mode !== "explore" || !clickToMove.selectedSquare) {
-      return [];
-    }
-
-    // Get all possible moves from the selected square in SAN notation
-    const moves = gameState.game.moves({
-      square: clickToMove.selectedSquare as Square,
-      verbose: true,
-    }) as Move[];
-
-    const sanMoves = moves.map((m) => m.san);
-
-    // Filter openings where the next move matches any of the selected piece's moves
-    const filtered = openings.filter((opening) => {
-      if (opening.moves.length <= gameState.moveHistory.length) return false;
-
-      // Check if all previous moves match
-      const historyMatches = gameState.moveHistory.every(
-        (move, i) => opening.moves[i] === move
-      );
-      if (!historyMatches) return false;
-
-      // Check if the next move is one of the selected piece's moves
-      const nextMove = opening.moves[gameState.moveHistory.length];
-      return sanMoves.includes(nextMove);
-    });
-
-    // Sort by popularity
-    return filtered
-      .slice()
-      .sort((a, b) => {
-        if (b.popularity !== a.popularity) return b.popularity - a.popularity;
-        if (a.src === "eco_tsv" && b.src !== "eco_tsv") return -1;
-        if (b.src === "eco_tsv" && a.src !== "eco_tsv") return 1;
-        if (a.isEcoRoot && !b.isEcoRoot) return -1;
-        if (b.isEcoRoot && !a.isEcoRoot) return 1;
-        return 0;
-      })
-      .slice(0, 20);
-  }, [
-    gameState.mode,
-    gameState.game,
-    gameState.moveHistory,
-    clickToMove.selectedSquare,
-    openings,
-  ]);
 
   const startPopularAt = useCallback(
     (index: number, startAtFinalPosition: boolean = false) => {
@@ -356,12 +301,13 @@ const selectedPieceOpenings = useMemo(() => {
         toast.success(
           `Started studying: ${chosen.name}${startAtFinalPosition ? " (at final position)" : ""}`,
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error starting opening:", error);
-        toast.error(`Failed to start opening: ${error.message}`);
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(`Failed to start opening: ${message}`);
       }
     },
-    [popularSorted, updateGameState, dispatch, resetGame],
+    [popularSorted, updateGameState, dispatch, resetGame, toast],
   );
 
   const startSearchResult = useCallback(
@@ -401,12 +347,13 @@ const selectedPieceOpenings = useMemo(() => {
         toast.success(
           `Started studying: ${opening.name}${startAtFinalPosition ? " (at final position)" : ""}`,
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error starting opening:", error);
-        toast.error(`Failed to start opening: ${error.message}`);
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(`Failed to start opening: ${message}`);
       }
     },
-    [popularSorted, updateGameState, dispatch, resetGame],
+    [popularSorted, updateGameState, dispatch, resetGame, toast],
   );
 
   const handleSearchQueryChange = useCallback((query: string) => {

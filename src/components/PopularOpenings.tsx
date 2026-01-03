@@ -18,7 +18,7 @@ interface OpeningsListProps {
 export const OpeningsList: React.FC<OpeningsListProps> = ({
   title,
   subtitle,
-  moveHistory,
+  moveHistory: _moveHistory,
   openings,
   startPopularAt,
   toggleFavourite,

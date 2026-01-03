@@ -27,7 +27,7 @@ export function useClickToMove(
     setEnabled((prev) => !prev);
     setSelectedSquare(null);
     toast.success(`${!enabled ? "Enabled" : "Disabled"} click-to-move mode`);
-  }, [enabled]);
+  }, [enabled, toast]);
 
   const isActive = mode === "explore";
 
