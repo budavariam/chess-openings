@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { MemoryRouter } from 'react-router-dom';
 import { ModeSelector } from './ModeSelector';
 
 const meta = {
@@ -20,13 +19,6 @@ const meta = {
     resetGame: () => {},
     logAction: () => {},
   },
-  decorators: [
-    (Story) => (
-      <MemoryRouter>
-        <Story />
-      </MemoryRouter>
-    ),
-  ],
 } satisfies Meta<typeof ModeSelector>;
 
 export default meta;

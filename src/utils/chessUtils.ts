@@ -24,6 +24,27 @@ export function parseMovesString(movesStr: string): string[] {
   });
 }
 
+export function formatMovesAsChessNotation(moves: string[], maxMoves?: number): string {
+  if (!moves || moves.length === 0) return "";
+
+  const movesToShow = maxMoves ? moves.slice(0, maxMoves) : moves;
+  const pairs: string[] = [];
+
+  for (let i = 0; i < movesToShow.length; i += 2) {
+    const moveNumber = Math.floor(i / 2) + 1;
+    const whiteMove = movesToShow[i];
+    const blackMove = movesToShow[i + 1];
+
+    if (blackMove) {
+      pairs.push(`${moveNumber}.${whiteMove} ${blackMove}`);
+    } else {
+      pairs.push(`${moveNumber}.${whiteMove}`);
+    }
+  }
+
+  return pairs.join(" ");
+}
+
 // Get last move for highlighting
 export function getLastMove(game: any): { from: string; to: string } | null {
   const history = game.history({ verbose: true });

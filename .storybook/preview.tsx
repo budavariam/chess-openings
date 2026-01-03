@@ -1,4 +1,6 @@
 import type { Preview } from '@storybook/react';
+import { MemoryRouter } from 'react-router-dom';
+import { ToastSettingsProvider } from '../src/contexts/ToastSettingsContext';
 import '../src/styles.css';
 
 const preview: Preview = {
@@ -50,7 +52,13 @@ const preview: Preview = {
         }
       }
 
-      return <Story />;
+      return (
+        <MemoryRouter>
+          <ToastSettingsProvider>
+            <Story />
+          </ToastSettingsProvider>
+        </MemoryRouter>
+      );
     },
   ],
 };

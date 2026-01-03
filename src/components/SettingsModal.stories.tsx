@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { SettingsModal } from './SettingsModal';
 import { DEFAULT_TOAST_SETTINGS } from '../types/toastSettings';
 import type { ToastSettings } from '../types/toastSettings';
-import { ToastSettingsProvider } from '../contexts/ToastSettingsContext';
 
 const meta = {
   title: 'Components/SettingsModal',
@@ -12,13 +11,6 @@ const meta = {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
-  decorators: [
-    (Story) => (
-      <ToastSettingsProvider>
-        <Story />
-      </ToastSettingsProvider>
-    ),
-  ],
 } satisfies Meta<typeof SettingsModal>;
 
 export default meta;

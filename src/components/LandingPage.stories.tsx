@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { MemoryRouter } from 'react-router-dom';
 import { LandingPage } from './LandingPage';
 
 const meta = {
@@ -11,11 +10,9 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <MemoryRouter initialEntries={['/']}>
-        <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-6">
-          <Story />
-        </div>
-      </MemoryRouter>
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-6">
+        <Story />
+      </div>
     ),
   ],
 } satisfies Meta<typeof LandingPage>;
@@ -28,11 +25,9 @@ export const Default: Story = {};
 export const DarkMode: Story = {
   decorators: [
     (Story) => (
-      <MemoryRouter initialEntries={['/']}>
-        <div className="dark min-h-screen bg-gray-900 text-gray-100 p-6">
-          <Story />
-        </div>
-      </MemoryRouter>
+      <div className="dark min-h-screen bg-gray-900 text-gray-100 p-6">
+        <Story />
+      </div>
     ),
   ],
 };

@@ -1,5 +1,6 @@
 import { ExternalExplorer } from "./ExternalExplorer";
 import { OpeningItem, getOpeningId } from "./OpeningItem";
+import { formatMovesAsChessNotation } from "../utils/chessUtils";
 import type { Opening, ChessMode } from "../types";
 
 interface GameStatusProps {
@@ -89,8 +90,8 @@ export function GameStatus({
           <h3 className="font-medium text-gray-900 dark:text-white mb-2">
             Move History
           </h3>
-          <div className="text-sm text-gray-400 break-words">
-            {moveHistory.length > 0 ? moveHistory.join(" ") : "—"}
+          <div className="text-sm text-gray-400 break-words font-mono">
+            {moveHistory.length > 0 ? formatMovesAsChessNotation(moveHistory) : "—"}
           </div>
           <div className="text-xs text-gray-500 mt-1">
             {openingsCount} openings loaded

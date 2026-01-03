@@ -1,5 +1,6 @@
 
 import type { Opening, ChessMode } from "../types";
+import { formatMovesAsChessNotation } from "../utils/chessUtils";
 
 interface OpeningItemProps {
   opening: Opening;
@@ -114,11 +115,11 @@ export function OpeningItem({
 
         {/* Move sequence */}
         <div className="text-sm text-gray-600 dark:text-gray-400 font-mono leading-relaxed">
-          {opening.moves.slice(0, 8).join(" ")}
-          {opening.moves.length > 8 && (
+          {formatMovesAsChessNotation(opening.moves, 16)}
+          {opening.moves.length > 16 && (
             <span className="text-gray-400">
               {" "}
-              ... +{opening.moves.length - 8} more
+              ... +{opening.moves.length - 16} more
             </span>
           )}
         </div>
@@ -173,8 +174,8 @@ export function OpeningItem({
       {/* Moves display */}
       <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
         <span className="font-mono">
-          {opening.moves.slice(0, 6).join(" ")}
-          {opening.moves.length > 6 && " ..."}
+          {formatMovesAsChessNotation(opening.moves, 12)}
+          {opening.moves.length > 12 && " ..."}
         </span>
         <span className="ml-2 text-xs">{opening.moves.length} moves</span>
       </div>
