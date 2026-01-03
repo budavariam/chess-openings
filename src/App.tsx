@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import ChessPractice from "./ChessPractice";
 import { Footer } from "./components/Footer";
 import { SettingsModal } from "./components/SettingsModal";
-import { ToastSettingsProvider, useToastSettingsContext } from "./contexts/ToastSettingsContext";
+import { LandingPage } from "./components/LandingPage";
+import { useToastSettingsContext } from "./contexts/ToastSettingsContext";
 import "react-toastify/dist/ReactToastify.css";
 
-function AppContent() {
+export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [dark, setDark] = useState(() => {
     try {
       const saved = localStorage.getItem("theme");
@@ -39,9 +42,20 @@ function AppContent() {
   return (
     <div className="min-h-screen min-w-[320px] bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
       <header className="min-w-[320px] p-3 sm:p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
-        <h1 className="text-lg sm:text-2xl font-semibold truncate pr-2">
-          Chess Openings Trainer
-        </h1>
+        <div className="flex items-center gap-2 sm:gap-4">
+          {location.pathname !== "/" && (
+            <button
+              onClick={() => navigate("/")}
+              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+              title="Home"
+            >
+              🏠
+            </button>
+          )}
+          <h1 className="text-lg sm:text-2xl font-semibold truncate pr-2">
+            Chess Openings Trainer
+          </h1>
+        </div>
         <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -69,13 +83,13 @@ function AppContent() {
       </header>
       <main className="min-w-[320px] p-3 sm:p-6">
         <Routes>
-          <Route path="/" element={<Navigate to="/practice" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/practice" element={<ChessPractice />} />
           <Route path="/explore" element={<ChessPractice />} />
           <Route path="/search" element={<ChessPractice />} />
           <Route path="/popular" element={<ChessPractice />} />
           <Route path="/favourites" element={<ChessPractice />} />
-          <Route path="*" element={<Navigate to="/practice" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <Footer />
@@ -102,13 +116,5 @@ function AppContent() {
         onReset={resetToDefaults}
       />
     </div>
-  );
-}
-
-export default function App() {
-  return (
-    <ToastSettingsProvider>
-      <AppContent />
-    </ToastSettingsProvider>
   );
 }
