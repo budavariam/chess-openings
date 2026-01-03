@@ -10,10 +10,15 @@ export function calculatePopularity(data: any): number {
   return 25;
 }
 
-// Parse move string into clean array
 export function parseMovesString(movesStr: string): string[] {
   if (!movesStr) return [];
-  return movesStr.split(/\s+/).filter((move: string) => {
+
+  let normalized = movesStr
+    .replace(/(\d+)\./g, '$1. ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return normalized.split(/\s+/).filter((move: string) => {
     const trimmed = move.trim();
     return trimmed && !trimmed.match(/^\d+\.+$/);
   });

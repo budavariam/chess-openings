@@ -317,7 +317,7 @@ const selectedPieceOpenings = useMemo(() => {
   ]);
 
   const startPopularAt = useCallback(
-    (index: number) => {
+    (index: number, startAtFinalPosition: boolean = false) => {
       try {
         const chosen = popularSorted[index];
         if (!chosen) {
@@ -325,36 +325,65 @@ const selectedPieceOpenings = useMemo(() => {
           return;
         }
 
+        resetGame();
+
         const g = new Chess();
+        const targetIndex = startAtFinalPosition ? chosen.moves.length : 0;
+
+        for (let i = 0; i < targetIndex; i++) {
+          if (i < chosen.moves.length) {
+            const moveStr = chosen.moves[i];
+            const move = g.move(moveStr);
+            if (!move) {
+              console.error("Failed to apply move during opening start:", {
+                moveIndex: i,
+                move: moveStr,
+                currentFen: g.fen(),
+                movesSoFar: g.history(),
+              });
+              toast.error(`Invalid move in opening at position ${i + 1}: ${moveStr}`);
+              break;
+            }
+          }
+        }
+
         dispatch({ type: "SET_POPULAR_INDEX", payload: index });
         dispatch({ type: "SET_MATCHED_OPENING", payload: chosen });
         dispatch({ type: "SET_IS_PLAYING_OPENING", payload: true });
         dispatch({ type: "SET_MODE", payload: "popular" });
-        updateGameState(g, 0);
+        updateGameState(g, targetIndex);
 
-        toast.success(`Started studying: ${chosen.name}`);
+        toast.success(
+          `Started studying: ${chosen.name}${startAtFinalPosition ? " (at final position)" : ""}`,
+        );
       } catch (error: any) {
+        console.error("Error starting opening:", error);
         toast.error(`Failed to start opening: ${error.message}`);
       }
     },
-    [popularSorted, updateGameState, dispatch],
+    [popularSorted, updateGameState, dispatch, resetGame],
   );
 
   const startSearchResult = useCallback(
-    (opening: Opening, resumeAtLastPosition: boolean = true) => {
+    (opening: Opening, startAtFinalPosition: boolean = false) => {
       try {
-        const g = new Chess();
-        const targetIndex = resumeAtLastPosition ? opening.moves.length : 0;
+        resetGame();
 
-        // Play moves up to target position
+        const g = new Chess();
+        const targetIndex = startAtFinalPosition ? opening.moves.length : 0;
+
         for (let i = 0; i < targetIndex; i++) {
           if (i < opening.moves.length) {
-            const move = g.move(opening.moves[i]);
+            const moveStr = opening.moves[i];
+            const move = g.move(moveStr);
             if (!move) {
               console.error("Failed to apply move during opening start:", {
                 moveIndex: i,
-                move: opening.moves[i],
+                move: moveStr,
+                currentFen: g.fen(),
+                movesSoFar: g.history(),
               });
+              toast.error(`Invalid move in opening at position ${i + 1}: ${moveStr}`);
               break;
             }
           }
@@ -370,13 +399,14 @@ const selectedPieceOpenings = useMemo(() => {
         updateGameState(g, targetIndex);
 
         toast.success(
-          `Started studying: ${opening.name}${resumeAtLastPosition ? " (at final position)" : ""}`,
+          `Started studying: ${opening.name}${startAtFinalPosition ? " (at final position)" : ""}`,
         );
       } catch (error: any) {
+        console.error("Error starting opening:", error);
         toast.error(`Failed to start opening: ${error.message}`);
       }
     },
-    [popularSorted, updateGameState, dispatch],
+    [popularSorted, updateGameState, dispatch, resetGame],
   );
 
   const handleSearchQueryChange = useCallback((query: string) => {

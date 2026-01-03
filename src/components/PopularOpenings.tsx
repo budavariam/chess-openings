@@ -7,7 +7,7 @@ interface OpeningsListProps {
   subtitle?: string;
   moveHistory: string[];
   openings: Opening[];
-  startPopularAt: (index: number) => void;
+  startPopularAt: (index: number, startAtFinalPosition?: boolean) => void;
   toggleFavourite: (openingId: string) => void;
   favouriteIds: string[];
   mode?: ChessMode;
@@ -25,13 +25,12 @@ export const OpeningsList: React.FC<OpeningsListProps> = ({
   mode = "popular",
   maxItems = 20,
 }) => {
-  // Wrapper function to convert index-based callback to opening-based
-  const handleStudyOpening = (opening: Opening) => {
+  const handleStudyOpening = (opening: Opening, startAtFinalPosition?: boolean) => {
     const index = openings.findIndex(
       (o) => getOpeningId(o) === getOpeningId(opening),
     );
     if (index !== -1) {
-      startPopularAt(index);
+      startPopularAt(index, startAtFinalPosition);
     }
   };
 
@@ -74,11 +73,10 @@ export const OpeningsList: React.FC<OpeningsListProps> = ({
   );
 };
 
-// Keep PopularOpenings as a wrapper for backward compatibility
 interface PopularOpeningsProps {
   moveHistory: string[];
   popularSorted: Opening[];
-  startPopularAt: (index: number) => void;
+  startPopularAt: (index: number, startAtFinalPosition?: boolean) => void;
   toggleFavourite: (openingId: string) => void;
   favouriteIds: string[];
   mode?: ChessMode;

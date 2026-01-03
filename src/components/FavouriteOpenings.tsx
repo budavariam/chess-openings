@@ -4,7 +4,7 @@ import { OpeningItem, getOpeningId } from "./OpeningItem";
 
 interface FavouriteOpeningsProps {
   favouriteOpenings: Opening[];
-  startSearchResult: (opening: Opening, resumeAtLastPosition?: boolean) => void;
+  startSearchResult: (opening: Opening, startAtFinalPosition?: boolean) => void;
   toggleFavourite: (openingId: string) => void;
   favouriteIds: string[];
   mode?: ChessMode;

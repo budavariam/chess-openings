@@ -5,7 +5,7 @@ interface OpeningItemProps {
   opening: Opening;
   isFavourite: boolean;
   toggleFavourite: (openingId: string) => void;
-  onStudy?: (opening: Opening, resumeAtLastPosition?: boolean) => void;
+  onStudy?: (opening: Opening, startAtFinalPosition?: boolean) => void;
   variant?: "list" | "expanded";
   mode?: ChessMode;
   showIndex?: number;
