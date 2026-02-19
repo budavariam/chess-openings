@@ -81,6 +81,19 @@ export function LandingPage() {
       color: "border-green-300 dark:border-green-700",
     },
     {
+      title: "Sight Training",
+      icon: "🎯",
+      description: "Train board vision by clicking the correct target square",
+      features: [
+        "Level 1: click the announced square instantly",
+        "Level 2: random position + SAN move challenge",
+        "Build fast square recognition",
+        "Improve SAN-to-board translation speed",
+      ],
+      route: "/sight-training",
+      color: "border-indigo-300 dark:border-indigo-700",
+    },
+    {
       title: "Popular Openings",
       icon: "⭐",
       description: "Study the most common and important openings",

@@ -12,7 +12,13 @@ export type Opening = {
   aliases?: Record<string, string>;
 };
 
-export type ChessMode = "practice" | "explore" | "popular" | "search" | "favourites";
+export type ChessMode =
+  | "practice"
+  | "explore"
+  | "popular"
+  | "search"
+  | "favourites"
+  | "sight-training";
 
 export type BoardOrientation = "white" | "black";
 

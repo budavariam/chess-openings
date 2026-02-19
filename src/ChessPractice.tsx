@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Chess, Square, Move } from "chess.js";
 import { PieceDropHandlerArgs } from "react-chessboard";
@@ -18,6 +18,31 @@ import { usePreferences } from "./hooks/usePreferences";
 import { useGameState, useSuggestions } from "./hooks/useGameState";
 import { useClickToMove } from "./hooks/useClickToMove";
 
+type SightTrainingMode = "mode1" | "mode2";
+
+interface SightTrainingMoveChallenge {
+  from: string;
+  to: string;
+  san: string;
+}
+
+function getRandomSquare(): string {
+  const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+  const ranks = ["1", "2", "3", "4", "5", "6", "7", "8"];
+  return `${files[Math.floor(Math.random() * files.length)]}${ranks[Math.floor(Math.random() * ranks.length)]}`;
+}
+
+function readHighScore(key: string): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? Number.parseInt(raw, 10) : 0;
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default function ChessPractice() {
   const location = useLocation();
   const toast = useToast();
@@ -32,6 +57,156 @@ export default function ChessPractice() {
     resetGame,
     updateGameState,
   } = useGameState();
+  const [initialSightTrainingSquare] = useState(() => getRandomSquare());
+  const [sightTrainingMode, setSightTrainingMode] = useState<SightTrainingMode>("mode1");
+  const [sightTrainingGame, setSightTrainingGame] = useState(() => new Chess());
+  const [sightTrainingPrompt, setSightTrainingPrompt] = useState(
+    `Click square ${initialSightTrainingSquare.toUpperCase()}`,
+  );
+  const [sightTrainingExpectedSquare, setSightTrainingExpectedSquare] = useState(
+    initialSightTrainingSquare,
+  );
+  const [sightTrainingMoveChallenge, setSightTrainingMoveChallenge] =
+    useState<SightTrainingMoveChallenge | null>(null);
+  const [sightTrainingScores, setSightTrainingScores] = useState<Record<SightTrainingMode, number>>({
+    mode1: 0,
+    mode2: 0,
+  });
+  const [sightTrainingHighScores, setSightTrainingHighScores] = useState<Record<SightTrainingMode, number>>({
+    mode1: readHighScore("sight-training-high-score-mode1"),
+    mode2: readHighScore("sight-training-high-score-mode2"),
+  });
+  const [sightTrainingTurnLabel, setSightTrainingTurnLabel] = useState("White");
+
+  const updateSightTrainingHighScore = useCallback((mode: SightTrainingMode, score: number) => {
+    setSightTrainingHighScores((prev) => {
+      if (score <= prev[mode]) return prev;
+      const next = { ...prev, [mode]: score };
+      try {
+        window.localStorage.setItem(
+          mode === "mode1"
+            ? "sight-training-high-score-mode1"
+            : "sight-training-high-score-mode2",
+          String(score),
+        );
+      } catch {
+        // Ignore localStorage failures
+      }
+      return next;
+    });
+  }, []);
+
+  const resetSightTrainingScore = useCallback((mode: SightTrainingMode) => {
+    setSightTrainingScores((prev) => ({ ...prev, [mode]: 0 }));
+  }, []);
+
+  const incrementSightTrainingScore = useCallback((mode: SightTrainingMode) => {
+    setSightTrainingScores((prev) => {
+      const nextScore = prev[mode] + 1;
+      updateSightTrainingHighScore(mode, nextScore);
+      return { ...prev, [mode]: nextScore };
+    });
+  }, [updateSightTrainingHighScore]);
+
+  const startSightTrainingModeOne = useCallback((resetScore: boolean = false) => {
+    const square = getRandomSquare();
+
+    setSightTrainingMode("mode1");
+    setSightTrainingGame(new Chess());
+    setSightTrainingPrompt(`Click square ${square.toUpperCase()}`);
+    setSightTrainingExpectedSquare(square);
+    setSightTrainingMoveChallenge(null);
+    setSightTrainingTurnLabel("White");
+    if (resetScore) {
+      resetSightTrainingScore("mode1");
+    }
+  }, [resetSightTrainingScore]);
+
+  const startSightTrainingModeTwo = useCallback((resetScore: boolean = false) => {
+    const game = new Chess();
+    const pliesToPlay = 6 + Math.floor(Math.random() * 14);
+
+    for (let i = 0; i < pliesToPlay; i++) {
+      const legalMoves = game.moves({ verbose: true }) as Move[];
+      if (legalMoves.length === 0) break;
+      const randomMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+      game.move(randomMove);
+    }
+
+    const legalMoves = game.moves({ verbose: true }) as Move[];
+    if (legalMoves.length === 0) {
+      startSightTrainingModeOne(resetScore);
+      return;
+    }
+
+    const challengeMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+
+    setSightTrainingMode("mode2");
+    setSightTrainingGame(game);
+    setSightTrainingPrompt(`Play ${challengeMove.san}`);
+    setSightTrainingExpectedSquare(challengeMove.to);
+    setSightTrainingMoveChallenge({
+      from: challengeMove.from,
+      to: challengeMove.to,
+      san: challengeMove.san,
+    });
+    setSightTrainingTurnLabel(game.turn() === "w" ? "White" : "Black");
+    if (resetScore) {
+      resetSightTrainingScore("mode2");
+    }
+  }, [resetSightTrainingScore, startSightTrainingModeOne]);
+
+  const handleSightTrainingSquareClick = useCallback((square: string) => {
+    if (sightTrainingMode !== "mode1") return;
+
+    if (square.toLowerCase() === sightTrainingExpectedSquare.toLowerCase()) {
+      incrementSightTrainingScore("mode1");
+      toast.success("Correct!");
+      startSightTrainingModeOne(false);
+      return;
+    }
+
+    toast.error(`Not correct. Try ${sightTrainingPrompt}.`);
+  }, [
+    incrementSightTrainingScore,
+    sightTrainingMode,
+    sightTrainingExpectedSquare,
+    sightTrainingPrompt,
+    startSightTrainingModeOne,
+    toast,
+  ]);
+
+  const onSightTrainingPieceDrop = useCallback(
+    (args: PieceDropHandlerArgs): boolean => {
+      if (sightTrainingMode !== "mode2" || !sightTrainingMoveChallenge) return false;
+      const { sourceSquare, targetSquare } = args;
+      if (!targetSquare) return false;
+
+      const isCorrectFrom =
+        sourceSquare.toLowerCase() === sightTrainingMoveChallenge.from.toLowerCase();
+      const isCorrectTo =
+        targetSquare.toLowerCase() === sightTrainingMoveChallenge.to.toLowerCase();
+
+      if (!isCorrectFrom || !isCorrectTo) {
+        toast.error(
+          `Wrong move. Expected ${sightTrainingMoveChallenge.san} (${sightTrainingMoveChallenge.from.toUpperCase()} to ${sightTrainingMoveChallenge.to.toUpperCase()}).`,
+        );
+        return false;
+      }
+
+      incrementSightTrainingScore("mode2");
+      toast.success("Correct move!");
+      startSightTrainingModeTwo(false);
+      return false;
+    },
+    [
+      incrementSightTrainingScore,
+      sightTrainingMode,
+      sightTrainingMoveChallenge,
+      startSightTrainingModeTwo,
+      toast,
+    ],
+  );
 
   // Sync mode with URL
   useEffect(() => {
@@ -41,6 +216,7 @@ export default function ChessPractice() {
       "/search": "search",
       "/popular": "popular",
       "/favourites": "favourites",
+      "/sight-training": "sight-training",
     };
 
     const modeFromPath = pathToMode[location.pathname];
@@ -371,14 +547,26 @@ const selectedPieceOpenings = useMemo(() => {
     [dispatch],
   );
 
+  const sightTrainingPosition = sightTrainingMode === "mode1"
+    ? "8/8/8/8/8/8/8/8 w - - 0 1"
+    : sightTrainingGame.fen();
+
   return (
     <div className="flex flex-col lg:flex-row gap-4">
       <ChessBoard
-        position={gameState.game.fen()}
+        position={gameState.mode === "sight-training" ? sightTrainingPosition : gameState.game.fen()}
         boardOrientation={gameState.boardOrientation}
-        onPieceDrop={gameState.mode === "explore" ? () => false : onPieceDrop}
-        onSquareClick={clickToMove.onSquareClick}
-        game={gameState.game}
+        onPieceDrop={gameState.mode === "sight-training"
+          ? onSightTrainingPieceDrop
+          : gameState.mode === "explore"
+            ? () => false
+            : onPieceDrop}
+        onSquareClick={
+          gameState.mode === "sight-training" && sightTrainingMode === "mode1"
+            ? handleSightTrainingSquareClick
+            : clickToMove.onSquareClick
+        }
+        game={gameState.mode === "sight-training" ? sightTrainingGame : gameState.game}
         boardTheme={preferences.boardTheme}
         showCoordinates={preferences.showCoordinates}
         clickToMoveMode={gameState.mode === "explore"}
@@ -406,7 +594,9 @@ const selectedPieceOpenings = useMemo(() => {
       </ChessBoard>
 
       <div className="flex-1 space-y-4 min-w-0 max-w-2xl">
-        <SuggestedMoves suggestions={suggestions} makeMove={makeMove} />
+        {gameState.mode !== "sight-training" && (
+          <SuggestedMoves suggestions={suggestions} makeMove={makeMove} />
+        )}
 
         <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between mb-3">
@@ -420,19 +610,81 @@ const selectedPieceOpenings = useMemo(() => {
               logAction={() => {}}
             />
           </div>
-          <GameStatus
-            isPlayingOpening={gameState.isPlayingOpening}
-            matchedOpening={gameState.matchedOpening}
-            popularMovesIndex={gameState.popularMovesIndex}
-            moveHistory={gameState.moveHistory}
-            openingsCount={openings.length}
-            onStudyOpening={startSearchResult}
-            logAction={() => {}}
-            toggleFavourite={preferences.toggleFavourite}
-            favouriteIds={preferences.favouriteIds}
-            mode={gameState.mode}
-            onMoveClick={(index) => navigateToMove(index, popularSorted)}
-          />
+          {gameState.mode === "sight-training" ? (
+            <div className="space-y-3">
+              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  {sightTrainingMode === "mode1"
+                    ? "Mode 1 • Empty board square click"
+                    : `Mode 2 • ${sightTrainingTurnLabel} to move`}
+                </div>
+                <div className="mt-1 text-lg font-semibold text-blue-700 dark:text-blue-300">
+                  {sightTrainingPrompt}
+                </div>
+                <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  {sightTrainingMode === "mode1"
+                    ? "Click the named square."
+                    : "Drag the correct piece to the destination square (do not just click)."}
+                </div>
+              </div>
+              <div className="text-sm p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="font-medium">
+                    Mode 1 Score: {sightTrainingScores.mode1} | High: {sightTrainingHighScores.mode1}
+                  </div>
+                  <div className="font-medium">
+                    Mode 2 Score: {sightTrainingScores.mode2} | High: {sightTrainingHighScores.mode2}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startSightTrainingModeOne(true)}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      sightTrainingMode === "mode1"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    Mode 1
+                  </button>
+                  <button
+                    onClick={() => startSightTrainingModeTwo(true)}
+                    className={`px-3 py-1 rounded transition-colors ${
+                      sightTrainingMode === "mode2"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    Mode 2
+                  </button>
+                  <button
+                    onClick={() =>
+                      sightTrainingMode === "mode1"
+                        ? startSightTrainingModeOne(false)
+                        : startSightTrainingModeTwo(false)
+                    }
+                    className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    New Challenge
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <GameStatus
+              isPlayingOpening={gameState.isPlayingOpening}
+              matchedOpening={gameState.matchedOpening}
+              popularMovesIndex={gameState.popularMovesIndex}
+              moveHistory={gameState.moveHistory}
+              openingsCount={openings.length}
+              onStudyOpening={startSearchResult}
+              logAction={() => {}}
+              toggleFavourite={preferences.toggleFavourite}
+              favouriteIds={preferences.favouriteIds}
+              mode={gameState.mode}
+              onMoveClick={(index) => navigateToMove(index, popularSorted)}
+            />
+          )}
         </div>
 
         {gameState.mode === "search" && (

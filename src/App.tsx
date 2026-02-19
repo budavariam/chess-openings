@@ -91,6 +91,7 @@ export default function App() {
           <Route path="/search" element={<ChessPractice />} />
           <Route path="/popular" element={<ChessPractice />} />
           <Route path="/favourites" element={<ChessPractice />} />
+          <Route path="/sight-training" element={<ChessPractice />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

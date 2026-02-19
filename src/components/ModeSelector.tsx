@@ -32,6 +32,7 @@ export function ModeSelector({
   const modes: { key: ChessMode; label: string; icon: string }[] = [
     { key: "practice", label: "Practice", icon: "♟️" },
     { key: "explore", label: "Explore", icon: "🧭" },
+    { key: "sight-training", label: "Sight Training", icon: "🎯" },
     { key: "search", label: "Search", icon: "🔍" },
     { key: "popular", label: "Popular", icon: "⭐" },
     { key: "favourites", label: "Favourites", icon: "❤️" },

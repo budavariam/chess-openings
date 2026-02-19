@@ -11,7 +11,7 @@ const meta = {
   argTypes: {
     mode: {
       control: 'select',
-      options: ['practice', 'explore', 'search', 'popular', 'favourites'],
+      options: ['practice', 'explore', 'sight-training', 'search', 'popular', 'favourites'],
     },
   },
   args: {
@@ -39,6 +39,12 @@ export const Explore: Story = {
 export const Search: Story = {
   args: {
     mode: 'search',
+  },
+};
+
+export const SightTraining: Story = {
+  args: {
+    mode: 'sight-training',
   },
 };
 
