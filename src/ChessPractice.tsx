@@ -18,7 +18,15 @@ import { usePreferences } from "./hooks/usePreferences";
 import { useGameState, useSuggestions } from "./hooks/useGameState";
 import { useClickToMove } from "./hooks/useClickToMove";
 
-type SightTrainingMode = "mode1" | "mode2";
+type SightTrainingMode =
+  | "square-recognition"
+  | "move-by-notation";
+
+type SquareRecognitionSide = "white" | "black";
+type SightTrainingScoreKey =
+  | "square-recognition-white"
+  | "square-recognition-black"
+  | "move-by-notation";
 
 interface SightTrainingMoveChallenge {
   from: string;
@@ -58,7 +66,10 @@ export default function ChessPractice() {
     updateGameState,
   } = useGameState();
   const [initialSightTrainingSquare] = useState(() => getRandomSquare());
-  const [sightTrainingMode, setSightTrainingMode] = useState<SightTrainingMode>("mode1");
+  const [sightTrainingMode, setSightTrainingMode] = useState<SightTrainingMode>(
+    "square-recognition",
+  );
+  const [squareRecognitionSide, setSquareRecognitionSide] = useState<SquareRecognitionSide>("white");
   const [sightTrainingGame, setSightTrainingGame] = useState(() => new Chess());
   const [sightTrainingPrompt, setSightTrainingPrompt] = useState(
     `Click square ${initialSightTrainingSquare.toUpperCase()}`,
@@ -68,27 +79,24 @@ export default function ChessPractice() {
   );
   const [sightTrainingMoveChallenge, setSightTrainingMoveChallenge] =
     useState<SightTrainingMoveChallenge | null>(null);
-  const [sightTrainingScores, setSightTrainingScores] = useState<Record<SightTrainingMode, number>>({
-    mode1: 0,
-    mode2: 0,
+  const [sightTrainingScores, setSightTrainingScores] = useState<Record<SightTrainingScoreKey, number>>({
+    "square-recognition-white": 0,
+    "square-recognition-black": 0,
+    "move-by-notation": 0,
   });
-  const [sightTrainingHighScores, setSightTrainingHighScores] = useState<Record<SightTrainingMode, number>>({
-    mode1: readHighScore("sight-training-high-score-mode1"),
-    mode2: readHighScore("sight-training-high-score-mode2"),
+  const [sightTrainingHighScores, setSightTrainingHighScores] = useState<Record<SightTrainingScoreKey, number>>({
+    "square-recognition-white": readHighScore("sight-training-high-score-square-recognition-white"),
+    "square-recognition-black": readHighScore("sight-training-high-score-square-recognition-black"),
+    "move-by-notation": readHighScore("sight-training-high-score-move-by-notation"),
   });
   const [sightTrainingTurnLabel, setSightTrainingTurnLabel] = useState("White");
 
-  const updateSightTrainingHighScore = useCallback((mode: SightTrainingMode, score: number) => {
+  const updateSightTrainingHighScore = useCallback((key: SightTrainingScoreKey, score: number) => {
     setSightTrainingHighScores((prev) => {
-      if (score <= prev[mode]) return prev;
-      const next = { ...prev, [mode]: score };
+      if (score <= prev[key]) return prev;
+      const next = { ...prev, [key]: score };
       try {
-        window.localStorage.setItem(
-          mode === "mode1"
-            ? "sight-training-high-score-mode1"
-            : "sight-training-high-score-mode2",
-          String(score),
-        );
+        window.localStorage.setItem(`sight-training-high-score-${key}`, String(score));
       } catch {
         // Ignore localStorage failures
       }
@@ -96,33 +104,46 @@ export default function ChessPractice() {
     });
   }, []);
 
-  const resetSightTrainingScore = useCallback((mode: SightTrainingMode) => {
-    setSightTrainingScores((prev) => ({ ...prev, [mode]: 0 }));
+  const resetSightTrainingScore = useCallback((key: SightTrainingScoreKey) => {
+    setSightTrainingScores((prev) => ({ ...prev, [key]: 0 }));
   }, []);
 
-  const incrementSightTrainingScore = useCallback((mode: SightTrainingMode) => {
+  const incrementSightTrainingScore = useCallback((key: SightTrainingScoreKey) => {
     setSightTrainingScores((prev) => {
-      const nextScore = prev[mode] + 1;
-      updateSightTrainingHighScore(mode, nextScore);
-      return { ...prev, [mode]: nextScore };
+      const nextScore = prev[key] + 1;
+      updateSightTrainingHighScore(key, nextScore);
+      return { ...prev, [key]: nextScore };
     });
   }, [updateSightTrainingHighScore]);
 
-  const startSightTrainingModeOne = useCallback((resetScore: boolean = false) => {
+  const getSquareRecognitionScoreKey = useCallback(
+    (side: SquareRecognitionSide): SightTrainingScoreKey =>
+      side === "white" ? "square-recognition-white" : "square-recognition-black",
+    [],
+  );
+
+  const startSquareRecognitionChallenge = useCallback((
+    resetScore: boolean = false,
+    side: SquareRecognitionSide = squareRecognitionSide,
+  ) => {
     const square = getRandomSquare();
 
-    setSightTrainingMode("mode1");
+    setSightTrainingMode("square-recognition");
+    setSquareRecognitionSide(side);
     setSightTrainingGame(new Chess());
     setSightTrainingPrompt(`Click square ${square.toUpperCase()}`);
     setSightTrainingExpectedSquare(square);
     setSightTrainingMoveChallenge(null);
-    setSightTrainingTurnLabel("White");
+    setSightTrainingTurnLabel(side === "white" ? "White" : "Black");
     if (resetScore) {
-      resetSightTrainingScore("mode1");
+      resetSightTrainingScore(getSquareRecognitionScoreKey(side));
     }
-  }, [resetSightTrainingScore]);
+  }, [getSquareRecognitionScoreKey, resetSightTrainingScore, squareRecognitionSide]);
 
-  const startSightTrainingModeTwo = useCallback((resetScore: boolean = false) => {
+  const startMoveByNotationChallenge = useCallback(
+    (
+      resetScore: boolean = false,
+    ) => {
     const game = new Chess();
     const pliesToPlay = 6 + Math.floor(Math.random() * 14);
 
@@ -133,15 +154,15 @@ export default function ChessPractice() {
       game.move(randomMove);
     }
 
-    const legalMoves = game.moves({ verbose: true }) as Move[];
-    if (legalMoves.length === 0) {
-      startSightTrainingModeOne(resetScore);
-      return;
-    }
+      const legalMoves = game.moves({ verbose: true }) as Move[];
+      if (legalMoves.length === 0) {
+        startSquareRecognitionChallenge(resetScore);
+        return;
+      }
 
-    const challengeMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+      const challengeMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
 
-    setSightTrainingMode("mode2");
+      setSightTrainingMode("move-by-notation");
     setSightTrainingGame(game);
     setSightTrainingPrompt(`Play ${challengeMove.san}`);
     setSightTrainingExpectedSquare(challengeMove.to);
@@ -152,33 +173,39 @@ export default function ChessPractice() {
     });
     setSightTrainingTurnLabel(game.turn() === "w" ? "White" : "Black");
     if (resetScore) {
-      resetSightTrainingScore("mode2");
+        resetSightTrainingScore("move-by-notation");
     }
-  }, [resetSightTrainingScore, startSightTrainingModeOne]);
+    },
+    [resetSightTrainingScore, startSquareRecognitionChallenge],
+  );
 
   const handleSightTrainingSquareClick = useCallback((square: string) => {
-    if (sightTrainingMode !== "mode1") return;
+    if (sightTrainingMode !== "square-recognition") return;
 
     if (square.toLowerCase() === sightTrainingExpectedSquare.toLowerCase()) {
-      incrementSightTrainingScore("mode1");
+      incrementSightTrainingScore(getSquareRecognitionScoreKey(squareRecognitionSide));
       toast.success("Correct!");
-      startSightTrainingModeOne(false);
+      startSquareRecognitionChallenge(false, squareRecognitionSide);
       return;
     }
 
     toast.error(`Not correct. Try ${sightTrainingPrompt}.`);
   }, [
     incrementSightTrainingScore,
+    getSquareRecognitionScoreKey,
+    squareRecognitionSide,
     sightTrainingMode,
     sightTrainingExpectedSquare,
     sightTrainingPrompt,
-    startSightTrainingModeOne,
+    startSquareRecognitionChallenge,
     toast,
   ]);
 
   const onSightTrainingPieceDrop = useCallback(
     (args: PieceDropHandlerArgs): boolean => {
-      if (sightTrainingMode !== "mode2" || !sightTrainingMoveChallenge) return false;
+      if (sightTrainingMode !== "move-by-notation" || !sightTrainingMoveChallenge) {
+        return false;
+      }
       const { sourceSquare, targetSquare } = args;
       if (!targetSquare) return false;
 
@@ -194,16 +221,16 @@ export default function ChessPractice() {
         return false;
       }
 
-      incrementSightTrainingScore("mode2");
+      incrementSightTrainingScore("move-by-notation");
       toast.success("Correct move!");
-      startSightTrainingModeTwo(false);
+      startMoveByNotationChallenge(false);
       return false;
     },
     [
       incrementSightTrainingScore,
       sightTrainingMode,
       sightTrainingMoveChallenge,
-      startSightTrainingModeTwo,
+      startMoveByNotationChallenge,
       toast,
     ],
   );
@@ -547,22 +574,35 @@ const selectedPieceOpenings = useMemo(() => {
     [dispatch],
   );
 
-  const sightTrainingPosition = sightTrainingMode === "mode1"
+  const sightTrainingPosition = sightTrainingMode === "square-recognition"
     ? "8/8/8/8/8/8/8/8 w - - 0 1"
     : sightTrainingGame.fen();
+  const sightTrainingOrientation: BoardOrientation =
+    gameState.mode === "sight-training" &&
+      sightTrainingMode === "square-recognition" &&
+      squareRecognitionSide === "black"
+      ? "black"
+      : gameState.mode === "sight-training" &&
+      sightTrainingMode === "move-by-notation" &&
+      sightTrainingTurnLabel === "Black"
+      ? "black"
+        : gameState.boardOrientation;
+  const currentSightTrainingLabel = sightTrainingMode === "square-recognition"
+    ? "Square Recognition"
+    : "Move by Notation";
 
   return (
     <div className="flex flex-col lg:flex-row gap-4">
       <ChessBoard
         position={gameState.mode === "sight-training" ? sightTrainingPosition : gameState.game.fen()}
-        boardOrientation={gameState.boardOrientation}
+        boardOrientation={sightTrainingOrientation}
         onPieceDrop={gameState.mode === "sight-training"
           ? onSightTrainingPieceDrop
           : gameState.mode === "explore"
             ? () => false
             : onPieceDrop}
         onSquareClick={
-          gameState.mode === "sight-training" && sightTrainingMode === "mode1"
+          gameState.mode === "sight-training" && sightTrainingMode === "square-recognition"
             ? handleSightTrainingSquareClick
             : clickToMove.onSquareClick
         }
@@ -575,22 +615,24 @@ const selectedPieceOpenings = useMemo(() => {
         captureMoves={clickToMove.captureMoves}
         piecesWithMoves={clickToMove.piecesWithMoves}
       >
-        <OpeningControls
-          isPlayingOpening={gameState.isPlayingOpening}
-          matchedOpening={gameState.matchedOpening}
-          popularMovesIndex={gameState.popularMovesIndex}
-          onNavigate={(index) => navigateToMove(index, popularSorted)}
-          gameHistoryLength={gameState.moveHistory.length}
-          boardOrientation={gameState.boardOrientation}
-          setBoardOrientation={handleBoardOrientationChange}
-          boardTheme={preferences.boardTheme}
-          showCoordinates={preferences.showCoordinates}
-          onThemeChange={preferences.setBoardTheme}
-          onCoordinatesToggle={preferences.setShowCoordinates}
-          logAction={() => {}}
-          mode={gameState.mode}
-          openingMovesCount={openingMovesIndex.get(gameState.moveHistory.join("|"))?.size || 0}
-        />
+        {gameState.mode !== "sight-training" && (
+          <OpeningControls
+            isPlayingOpening={gameState.isPlayingOpening}
+            matchedOpening={gameState.matchedOpening}
+            popularMovesIndex={gameState.popularMovesIndex}
+            onNavigate={(index) => navigateToMove(index, popularSorted)}
+            gameHistoryLength={gameState.moveHistory.length}
+            boardOrientation={gameState.boardOrientation}
+            setBoardOrientation={handleBoardOrientationChange}
+            boardTheme={preferences.boardTheme}
+            showCoordinates={preferences.showCoordinates}
+            onThemeChange={preferences.setBoardTheme}
+            onCoordinatesToggle={preferences.setShowCoordinates}
+            logAction={() => {}}
+            mode={gameState.mode}
+            openingMovesCount={openingMovesIndex.get(gameState.moveHistory.join("|"))?.size || 0}
+          />
+        )}
       </ChessBoard>
 
       <div className="flex-1 space-y-4 min-w-0 max-w-2xl">
@@ -614,58 +656,91 @@ const selectedPieceOpenings = useMemo(() => {
             <div className="space-y-3">
               <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  {sightTrainingMode === "mode1"
-                    ? "Mode 1 • Empty board square click"
-                    : `Mode 2 • ${sightTrainingTurnLabel} to move`}
+                  {sightTrainingMode === "square-recognition"
+                    ? "Square Recognition • Empty board square click"
+                    : "Move by Notation"}
+                  {sightTrainingMode !== "square-recognition" && (
+                    <span className="ml-2">
+                      • {sightTrainingTurnLabel} to move
+                      {sightTrainingTurnLabel === "Black" && <span className="ml-1">♟</span>}
+                      {sightTrainingTurnLabel === "White" && <span className="ml-1">♙</span>}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-1 text-lg font-semibold text-blue-700 dark:text-blue-300">
                   {sightTrainingPrompt}
                 </div>
                 <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  {sightTrainingMode === "mode1"
+                  {sightTrainingMode === "square-recognition"
                     ? "Click the named square."
                     : "Drag the correct piece to the destination square (do not just click)."}
                 </div>
+                <button
+                  onClick={() =>
+                    sightTrainingMode === "square-recognition"
+                      ? startSquareRecognitionChallenge(false)
+                      : startMoveByNotationChallenge(false)
+                  }
+                  className="mt-3 px-3 py-2 rounded-md text-sm font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-fit"
+                >
+                  Skip
+                </button>
               </div>
               <div className="text-sm p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="font-medium">
-                    Mode 1 Score: {sightTrainingScores.mode1} | High: {sightTrainingHighScores.mode1}
-                  </div>
-                  <div className="font-medium">
-                    Mode 2 Score: {sightTrainingScores.mode2} | High: {sightTrainingHighScores.mode2}
-                  </div>
+                <div className="font-medium">
+                  {sightTrainingMode === "square-recognition"
+                    ? `${currentSightTrainingLabel} (${squareRecognitionSide === "white" ? "White" : "Black"}): ${sightTrainingScores[getSquareRecognitionScoreKey(squareRecognitionSide)]} | High: ${sightTrainingHighScores[getSquareRecognitionScoreKey(squareRecognitionSide)]}`
+                    : `${currentSightTrainingLabel}: ${sightTrainingScores["move-by-notation"]} | High: ${sightTrainingHighScores["move-by-notation"]}`}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => startSightTrainingModeOne(true)}
-                    className={`px-3 py-1 rounded transition-colors ${
-                      sightTrainingMode === "mode1"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    Mode 1
-                  </button>
-                  <button
-                    onClick={() => startSightTrainingModeTwo(true)}
-                    className={`px-3 py-1 rounded transition-colors ${
-                      sightTrainingMode === "mode2"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
-                    }`}
-                  >
-                    Mode 2
-                  </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Axis Labels:</span>
                   <button
                     onClick={() =>
-                      sightTrainingMode === "mode1"
-                        ? startSightTrainingModeOne(false)
-                        : startSightTrainingModeTwo(false)
+                      preferences.setShowCoordinates(!preferences.showCoordinates)
                     }
-                    className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-fit"
                   >
-                    New Challenge
+                    {preferences.showCoordinates ? "On" : "Off"}
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {sightTrainingMode === "square-recognition" && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Play As:</span>
+                      <button
+                        onClick={() =>
+                          startSquareRecognitionChallenge(
+                            false,
+                            squareRecognitionSide === "white" ? "black" : "white",
+                          )
+                        }
+                        className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-fit"
+                      >
+                        {squareRecognitionSide === "white" ? "White" : "Black"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1 p-1 bg-gray-200 dark:bg-gray-800 rounded-lg w-fit">
+                  <button
+                    onClick={() => startSquareRecognitionChallenge(true)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                      sightTrainingMode === "square-recognition"
+                        ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    Square Recognition
+                  </button>
+                  <button
+                    onClick={() => startMoveByNotationChallenge(true)}
+                    className={`px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                      sightTrainingMode === "move-by-notation"
+                        ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    Move by Notation
                   </button>
                 </div>
               </div>

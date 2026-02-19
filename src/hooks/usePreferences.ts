@@ -38,12 +38,13 @@ export function usePreferences(): Preferences {
     try {
       if (typeof window !== "undefined") {
         const saved = localStorage.getItem("chess-show-coordinates");
-        return saved !== "false";
+        if (saved === null) return false;
+        return saved === "true";
       }
     } catch (error) {
       console.error("Failed to load coordinates preference from localStorage:", error);
     }
-    return true;
+    return false;
   });
 
   const toast = useToast();
